@@ -1,0 +1,8 @@
+{
+  "name": "banzai/banzai",
+  "description": "Initial Empty Package, please stay tuned.",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.3.0"
+  }
+}

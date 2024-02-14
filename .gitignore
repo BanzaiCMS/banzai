@@ -1,0 +1,12 @@
+/.idea
+/.run/
+/vendor
+.buildpath
+.project
+composer.phar
+composer.lock
+.DS_Store
+Thumbs.db
+phpunit.xml
+.phpunit.cache
+.phpunit.result.cache

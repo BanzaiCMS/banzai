@@ -1,8 +1,39 @@
 {
-  "name": "banzai/banzai",
-  "description": "Initial Empty Package, please stay tuned.",
-  "license": "MIT",
-  "require": {
-    "php": ">=7.3.0"
-  }
+    "name": "banzai/banzai",
+    "type": "library",
+    "description": "The Banzai CMS Web Application Framework",
+    "keywords": [
+        "CMS",
+        "Web",
+        "framework",
+        "banzai"
+    ],
+    "license": "MIT",
+    "homepage": "https://www.ins.de/",
+    "authors": [
+        {
+            "name": "INS Developers",
+            "email": "info@ins.de"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-sodium": "*",
+        "flux/flux": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Banzai\\": "src/Banzai"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

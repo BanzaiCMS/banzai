@@ -31,7 +31,7 @@ use Banzai\Search\ElasticService;
 
 class Application extends FluxCoreApplication implements ApplicationInterface
 {
-    protected string $frameworkversion = '5.15.0-alpha1';
+    protected string $frameworkversion = '6.0.0-alpha2';
 
     public function getVersion(bool $parent = false): string
     {

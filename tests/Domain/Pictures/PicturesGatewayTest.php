@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 
-namespace INS\Domain\Tests\Pictures;
+namespace Banzai\Domain\Tests\Pictures;
 
 use Flux\Config\Config;
 use Flux\Database\Driver\PDOMySQL;

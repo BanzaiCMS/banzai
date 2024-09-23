@@ -4,6 +4,6 @@ namespace Banzai\Domain\Countries;
 
 class CountriesGateway
 {
-    const COUNTRY_TABLE = 'countries';
+    const string COUNTRY_TABLE = 'countries';
 
 }

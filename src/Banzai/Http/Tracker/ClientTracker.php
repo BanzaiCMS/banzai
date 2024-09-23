@@ -12,11 +12,11 @@ use Banzai\Http\Request;
 class ClientTracker
 {
 
-    const WEBTRACKER_VISIT_TABLE = 'visits';
-    const WEBTRACKER_CLICKS_TABLE = 'visit_clicks';
-    const WEBTRACKER_FEEDS_TABLE = 'feedsubscribers';
-    const CAMPAIGN_TABLE = 'campaigns';
-    const CONVERSIONTYPE_TABLE = 'conversion_types';
+    const string WEBTRACKER_VISIT_TABLE = 'visits';
+    const string WEBTRACKER_CLICKS_TABLE = 'visit_clicks';
+    const string WEBTRACKER_FEEDS_TABLE = 'feedsubscribers';
+    const string CAMPAIGN_TABLE = 'campaigns';
+    const string CONVERSIONTYPE_TABLE = 'conversion_types';
 
 
     protected int $WAFScore = 0;
@@ -192,19 +192,14 @@ class ClientTracker
 
 
     /**
-     * LEGACY-Funktion für alte PHP-Templates
-     *
-     * deprecated !!!
-     *
-     * @param string $cmd
-     * @param string $logfeed
-     * @return $this
+     * LEGACY function for old PHP templates
+     * @deprecated !!!
      */
     public function doLog(string $cmd = '', string $logfeed = ''): void
     {
 
-        global $item_obj;           // required for Legacy Functions,
-        global $catobj;             // required for Legacy Functions,
+        global $item_obj;           // TODO replace, required for Legacy Functions,
+        global $catobj;             // TODO replace, required for Legacy Functions,
 
         if (empty($item_obj))
             $page = $catobj;
@@ -316,19 +311,16 @@ class ClientTracker
 
         $jetzt = date('Y-m-d');
 
-        // FEED loggen
+        // log FEED
         if (!empty($logfeed)) {
             $feedip = $this->client_ip;
             $loagent = strtolower($this->agent);
 
             if (strncmp('netvibes', $loagent, 8) == 0) // Netvibes-reader kommt
-                // mit verschiedenen IPs
+                // with different IPs
                 $feedip = '0.0.0.0';
 
             if (strncmp('feedfetcher-google', $loagent, 18) == 0) // Feedfetcher
-                // kommt mit
-                // verschiedenen
-                // IPs
                 $feedip = '0.0.0.0';
 
             $subscriber = 1;
@@ -364,7 +356,7 @@ class ClientTracker
             }
         }
 
-        // In DB loggen ...
+        // logging in DB  ...
 
         $tcn = $this->params->get('system.tracking.cookie.name');
         if (empty($tcn))
@@ -375,7 +367,7 @@ class ClientTracker
         else
             $uv = '';
 
-        // falls kein tracking-cookie gesetzt ist, prüfen, ob session-cookie gesetzt ist und das verwenden
+        // If no tracking cookie is set, check whether session cookie is set and use that
 
         if (empty($uv) && isset($_COOKIE['secureinsid']))       // TODO
             $uv = $_COOKIE['secureinsid'];
@@ -383,8 +375,7 @@ class ClientTracker
         if (empty($uv) && isset($_COOKIE['insid']))             // TODO
             $uv = $_COOKIE['insid'];
 
-        // wenn cookie, dann cookie-key, sonst ip, sonst useragent für die zuordnung des visits verwenden
-
+        // if cookie, then cookie-key, otherwise ip, otherwise use user agent for the assignment of the visit
         // if cookie is set, we look for cookie AND ip-address, else wie look for ip-address AND user-agent
         // we always store the ip-addres in visit, even if we do not show it to the user
         // TODO clear ip-adress in timer after x-days (if $this->AllowTraceWithIP is not set in system params
@@ -405,20 +396,20 @@ class ClientTracker
             $bind['timeoutsecs'] = $timeoutsecs;
         }
 
-        // TOD
+        // TODO
         $visit = $this->db->get($sql, $bind);
 
         if (!empty($visit)) {
 
             $newvisit = false;
 
-            // falls cookie noch nicht gesetzt, dann setzen
+            // if cookie not yet set, then set
             if ((empty($visit['uvkey'])) && (!empty($uv))) {
                 $data = array('visitid' => $visit['visitid'], 'uvkey' => $uv);
                 $this->db->put(self::WEBTRACKER_VISIT_TABLE, $data, array('visitid'), false);
             }
 
-            // Kampagne vermerken, falls vorhanden
+            // Note campaign, if available
             if (isset($item_obj['campaignstart']))
                 if ($item_obj['campaignstart'] == 'always')
                     if ($visit['campaignid'] == 0) {
@@ -430,7 +421,7 @@ class ClientTracker
                             $this->db->put(self::WEBTRACKER_VISIT_TABLE, $data, array('visitid'), false);
                         }
                     }
-        } else { // Neuer Visit
+        } else { // New Visit
 
             $newvisit = true;
 
@@ -505,8 +496,7 @@ class ClientTracker
         $this->db->put(self::WEBTRACKER_VISIT_TABLE, $data, array('visitid'), false);
 
 
-        // Hier haben wir jetzt entweder einen visit neu angelegt oder einen
-        // vorhandenen geholt
+        // Here we have either created a new visit or retrieved an existing one
 
 
         $rec = array();
@@ -534,15 +524,6 @@ class ClientTracker
 
         if ($this->user->isLoggedIn())
             $rec['clickusername'] = $this->user->getLoginName();
-
-        // TODO if (! empty ( $this->_header ))
-        // TODO $rec ['responseheader'] = $this->_header;
-
-        // TODO if (! empty ( $this->_requestheader ))
-        // TODO $rec ['requestheader'] = $this->_requestheader;
-
-        // TODO if (! empty ( $this->_body ))
-        // TODO $rec ['responsebody'] = $this->_body;
 
         if (!empty($newvisit))
             $rec['entry_page'] = 'yes';
@@ -606,8 +587,6 @@ class ClientTracker
      */
     public function createPixel(bool $force = true): string
     {
-        // if (($visit['clicks_count']<20) && ($visit['getpixel']!='yes') &&
-        // ($cmd!='nopixel') ) {
 
         if (empty($this->visit))
             return '';
@@ -619,10 +598,6 @@ class ClientTracker
         $ra = time();
         $par = '?ra=' . $ra;
         $par = $par . '&amp;id=' . $this->visit['visitid'];
-        // $par = $par . '&amp;js=n';
-
-        // if (!empty($sess))
-        //    $par = $par . '&amp;se=' . $sess;
 
         $ret = <<<JAVASCRIPTBLABLA
 <script>
@@ -638,21 +613,12 @@ JAVASCRIPTBLABLA;
 
     }
 
-
-    /**
-     * @param $var
-     * @param $value
-     */
     public function setPageOption($var, $value): self
     {
         $this->_pageoptions[$var] = $value;
         return $this;
     }
 
-    /**
-     * @param $var
-     * @param $value
-     */
     public function setVisitOption($var, $value): self
     {
         $this->_visitoptions[$var] = $value;
@@ -672,10 +638,6 @@ JAVASCRIPTBLABLA;
     }
 
 
-    /**
-     * @param $rulesFile
-     * @return array
-     */
     protected function readRules($rulesFile): array
     {
         $rules = array();
@@ -694,10 +656,6 @@ JAVASCRIPTBLABLA;
         return $rules;
     }
 
-    /**
-     * @param string $string
-     * @return array
-     */
     public function userAgent($string = ''): array
     {
         if (empty($string))
@@ -741,11 +699,6 @@ JAVASCRIPTBLABLA;
         return $result;
     }
 
-    /**
-     * @param $elements
-     * @param $rules
-     * @return mixed|string
-     */
     protected function ruleMatch($elements, $rules)
     {
         if (!is_array($elements)) {
@@ -799,11 +752,7 @@ JAVASCRIPTBLABLA;
         return (!empty($result)) ? $result : $noMatch;
     }
 
-    /**
-     * @param $referer
-     * @return mixed
-     */
-    protected function searchEngine($referer): array
+     protected function searchEngine($referer): array
     {
         $ret = array();
 

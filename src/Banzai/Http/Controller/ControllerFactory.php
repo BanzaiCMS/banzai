@@ -11,8 +11,8 @@ class ControllerFactory
     public static function getController(ContainerInterface $di, string $cla = ''): ControllerInterface
     {
 
-        // TODO prüfen ob die Klasse das Interface ContainerInjectionInterface implementiert
-        // TODO und Fehlerbehandlung, falls nein
+        // TODO check whether the class implements the interface ContainerInjectionInterface
+        // TODO and error handling if not
 
         /** @noinspection PhpUndefinedMethodInspection */
         return $cla::create($di);

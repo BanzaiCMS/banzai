@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace Banzai\Navigation;
 
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Flux\Container\ContainerInterface;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
 use Banzai\Domain\Users\User;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 
 class TreeBuilderFromNavigationEntries implements TreeBuilderInterface

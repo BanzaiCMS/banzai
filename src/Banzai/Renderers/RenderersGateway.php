@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Renderers;
 
-use Flux\Logger\LoggerInterface;
 use const ENT_COMPAT;
 use const ENT_HTML401;
 use const ENT_SUBSTITUTE;
+use Flux\Logger\LoggerInterface;
 
 class RenderersGateway
 {

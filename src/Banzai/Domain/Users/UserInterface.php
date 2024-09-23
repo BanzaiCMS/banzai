@@ -1,14 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Domain\Users;
 
 use Banzai\Domain\Customers\CustomerInterface;
 use Banzai\Http\Session\Session;
 
-/**
- * Interface UserInterface
- * @package Banzai\Domain\Users
- */
 interface UserInterface
 {
     public function hasRootPermission(): bool;

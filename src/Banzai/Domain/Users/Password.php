@@ -1,40 +1,31 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Banzai\Domain\Users;
 
-use Flux\Database\DatabaseInterface;
-use Flux\Logger\LoggerInterface;
 use function md5;
 use const PASSWORD_ARGON2I;
 use const PASSWORD_ARGON2ID;
 use function password_hash;
 use function password_verify;
 
+use Flux\Database\DatabaseInterface;
+use Flux\Logger\LoggerInterface;
 
-
-/**
- * Class Password
- * @package Banzai\Domain\Users
- */
 class Password
 {
-    const   MD5A = 'md5a';
-    const   MYSQLMD5 = 'mysqlmd5';
-    const   SHA256 = 'sha256';
-    const   PWH = 'pwh';
-    const   PASSWORD_HISTORY_TABLE = 'password_history';
+    const   string MD5A = 'md5a';
+    const   string MYSQLMD5 = 'mysqlmd5';
+    const   string SHA256 = 'sha256';
+    const   string PWH = 'pwh';
+    const   string PASSWORD_HISTORY_TABLE = 'password_history';
 
     public function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger)
     {
     }
 
     /**
-     * Zentrale Funktion um ein Benutzerpasswort neu zu setzen und in der Datenbank zu speichern
-     *
-     * @param int $userid
-     * @param string $passstring
-     * @param bool $clearkey
-     * @return bool
+     * Central function to reset a user password and save it in the database
      */
     function set(int $userid, string $passstring, bool $clearkey = true): bool
     {
@@ -56,7 +47,7 @@ class Password
             return false;
         }
 
-        // damit wir eine saubere user-id haben
+        // so that we have a clean user-id
         $userid = (int)$usr['user_id'];
 
 
@@ -75,7 +66,7 @@ class Password
             return false;
         }
 
-        // 22.2.2018 prefix extrahieren, falls vorhanden um ihn für spätere auswertungen in der db zu speichern
+        // Extract prefix, if available, to store it in the db for later evaluation
         $pwa = explode('$', $pwd);
 
         if (isset($pwa[1]))
@@ -98,7 +89,7 @@ class Password
             return false;
         }
 
-        // password_history schreiben
+        // write password_history
         unset($d['lostpw_key']);
         if ($this->db->add(self::PASSWORD_HISTORY_TABLE, $d) < 1)
             $this->logger->error('can not add password history.', array('pwduserid' => $userid));
@@ -106,12 +97,6 @@ class Password
         return true;
     }
 
-    /**
-     * @param int $userid
-     * @param string $password
-     * @param array $usr
-     * @return bool
-     */
     public function verify(int $userid, string $password, array $usr = array()): bool
     {
 
@@ -128,7 +113,7 @@ class Password
 
         $okidoki = false;
 
-        switch ($usr['user_passtype']) { // Validationsverfahren ...
+        switch ($usr['user_passtype']) { // Validation procedure ...
             case self::MD5A:
                 $okidoki = $this->verifymd5a($password, $usr['user_password']);
                 break;
@@ -151,11 +136,6 @@ class Password
 
     }
 
-    /**
-     * @param string $plain
-     * @param string $encrypted
-     * @return bool
-     */
     private function verifymd5a(string $plain, string $encrypted): bool
     {
         if ((!empty($plain)) && (!empty($encrypted))) {
@@ -173,13 +153,6 @@ class Password
         return false;
     }
 
-
-    /**
-     * @param string $plain
-     * @param string $encrypted
-     * @param string $salt
-     * @return bool
-     */
     private function verifysha256(string $plain, string $encrypted, string $salt): bool
     {
         if (empty($plain))
@@ -195,11 +168,6 @@ class Password
         return strcmp($check, $encrypted) == 0;
     }
 
-    /**
-     * @param string $plain
-     * @param string $encrypted
-     * @return bool
-     */
     private function validatemysqlmd5(string $plain, string $encrypted): bool
     {
         $ret = $this->db->get('SELECT MD5(?) as mpwd ', array($plain));
@@ -212,11 +180,6 @@ class Password
         return strcmp($check, $encrypted) == 0;
     }
 
-    /**
-     * @param string $login
-     * @param string $password
-     * @return bool
-     */
     public function validateLoginPassword(string $login, string $password): bool
     {
         if (empty($login) || empty($password))

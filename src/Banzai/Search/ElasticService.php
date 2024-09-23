@@ -12,7 +12,7 @@ use Banzai\Domain\Articles\ArticlesGateway;
 
 class ElasticService
 {
-    const TYPE_ARTICLE = 'article';
+    const string TYPE_ARTICLE = 'article';
 
     protected ?array $config = null;
     public ?Client $client = null;
@@ -221,7 +221,6 @@ class ElasticService
             $this->indexArticle($art['article_id'], $data);
         }
 
-        // print_r($list);
         exit(0);
     }
 }

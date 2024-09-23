@@ -78,10 +78,6 @@ abstract class AbstractController implements ControllerInterface
         if (!empty($art['meta_subject']))
             $ret['subject'] = $art['meta_subject'];
 
-        // sprache kommt jetzt immer aus globalem wert
-        // if (!empty($lang))
-        //    $pheader['langcode'] = $lang;
-
         if (!empty($art['geo'])) {
             $geo = $art['geo'];
 
@@ -200,14 +196,13 @@ abstract class AbstractController implements ControllerInterface
 
         // if we have blocks, we pre-render them
 
-
         $data = array(
             'template' => $articletemplate,
             'basetemplate' => $basetemplate,
             'contenttemplate' => $cont_template,
             'header' => $htmlheader,
             'title' => $art['titel2'],
-            'content' => $art['langtext'],       // hier das rendering des langtexts
+            'content' => $art['langtext'],       // here rendering of langtext
             'navigation' => $nav,
             'blocks' => $blocks,
             'teaser' => $teaser,

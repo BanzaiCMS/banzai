@@ -1,16 +1,17 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Authentication;
 
 use Exception;
-use Banzai\Core\Application;
 use function random_bytes;
+use Banzai\Core\Application;
 
 class CSRFProtector
 {
-    const sessiontokenname = 'banzaicsrftoken';
+    const string sessiontokenname = 'banzaicsrftoken';
 
-    public static function setToken()
+    public static function setToken(): void
     {
         if (!self::isTokenProtectionActive())
             return;
@@ -23,14 +24,11 @@ class CSRFProtector
 
     }
 
-    public static function clearToken()
+    public static function clearToken(): void
     {
         unset($_SESSION[self::sessiontokenname]);
     }
 
-    /**
-     * @return string
-     */
     public static function getToken(): string
     {
         if (empty($_SESSION[self::sessiontokenname]))
@@ -40,27 +38,17 @@ class CSRFProtector
 
     }
 
-    /**
-     * @return string
-     */
     public static function getTokenName(): string
     {
         return self::sessiontokenname;
 
     }
 
-    /**
-     * @return bool
-     */
     public static function isTokenProtectionActive(): bool
     {
         return !empty(Application::get('config')->get('system.security.admin.csrf.token'));
     }
 
-
-    /**
-     * @return bool
-     */
     public static function validateTokenFromPost(): bool
     {
         if (!self::isTokenProtectionActive())

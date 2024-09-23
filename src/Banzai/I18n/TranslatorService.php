@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\I18n;
 
@@ -8,15 +9,15 @@ use Flux\Logger\LoggerInterface;
 class TranslatorService implements TranslatorServiceInterface
 {
 
-    const TRANSLATION_TABLE = 'translations';
+    const string TRANSLATION_TABLE = 'translations';
 
-    private $langid = 0;
+    private int $langid = 0;
 
-    private $fallbacklangid;
+    private int $fallbacklangid;
 
-    private $transdata = array();
+    private array $transdata = array();
 
-    private $autoupdatedb = true;
+    private bool $autoupdatedb = true;
 
 
     public function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger)
@@ -24,11 +25,7 @@ class TranslatorService implements TranslatorServiceInterface
 
     }
 
-    /**
-     * @param int $langid
-     * @param string $textDomain
-     */
-    public function addDBtranslationData(int $langid = 0, string $textDomain = ''):void
+    public function addDBtranslationData(int $langid = 0, string $textDomain = ''): void
     {
         if ($langid < 1) {
             $this->logger->error('langid<1');
@@ -41,11 +38,11 @@ class TranslatorService implements TranslatorServiceInterface
 
     }
 
-    public function addTranslationFile($type, $filename, $textDomain = '', $langid = 0):void
+    public function addTranslationFile($type, $filename, $textDomain = '', $langid = 0): void
     {
     }
 
-    public function setLangid(int $langid = 0, bool $loaddata = true):void
+    public function setLangid(int $langid = 0, bool $loaddata = true): void
     {
         if ($langid < 1) {
             $this->logger->error('langid<1');
@@ -59,7 +56,7 @@ class TranslatorService implements TranslatorServiceInterface
     }
 
 
-    public function setFallbackLangid(int $langid = 0, bool $loaddata = true):void
+    public function setFallbackLangid(int $langid = 0, bool $loaddata = true): void
     {
 
         if ($langid < 1) {
@@ -73,7 +70,7 @@ class TranslatorService implements TranslatorServiceInterface
             $this->addDBtranslationData($langid);
     }
 
-    public function setAutoUpdate($update = true):void
+    public function setAutoUpdate($update = true): void
     {
         if ($update)
             $this->autoupdatedb = true;
@@ -112,7 +109,7 @@ class TranslatorService implements TranslatorServiceInterface
             return ($ret);
         }
 
-        // message/key not found und automatisch leeren datensatz anlegen
+        // message/key not found and automatically create empty data record
         if ($this->autoupdatedb) {
             $data = array();
             $data['language_id'] = $langid;
@@ -134,7 +131,7 @@ class TranslatorService implements TranslatorServiceInterface
             return ($ret);
         }
 
-        // message/key not found und automatisch leeren datensatz anlegen
+        // message/key not found and automatically create empty data record
         if ($this->autoupdatedb) {
             $data = array();
             $data['language_id'] = $fallbacklangid;
@@ -152,7 +149,7 @@ class TranslatorService implements TranslatorServiceInterface
         return ($ret);
     }
 
-    public function isPlural($number = 0):bool
+    public function isPlural($number = 0): bool
     {
 
         if ($number == 1)
@@ -161,7 +158,7 @@ class TranslatorService implements TranslatorServiceInterface
             return true;
     }
 
-    public function translatePlural(string $singular, string $plural, $number=0, array $replacedata = array(), $textDomain = '', int $langid = 0):string
+    public function translatePlural(string $singular, string $plural, $number = 0, array $replacedata = array(), $textDomain = '', int $langid = 0): string
     {
         $isplural = $this->isPlural($number);
 

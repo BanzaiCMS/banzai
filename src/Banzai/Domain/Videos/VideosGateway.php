@@ -1,43 +1,32 @@
 <?php
 declare(strict_types=1);
 
-
 namespace Banzai\Domain\Videos;
 
-use Banzai\Core\Application;
-use Banzai\Http\FileResponse;
-use Banzai\Renderers\RenderersGateway;
-
-use Flux\Database\DatabaseInterface;
-use Flux\Logger\LoggerInterface;
-use Banzai\Domain\Pictures\PicturesGateway;
-
+use JetBrains\PhpStorm\NoReturn;
 use function date;
 use function date_default_timezone_set;
 use function header;
 use function ini_set;
 use function mktime;
 use function session_write_close;
+use Flux\Database\DatabaseInterface;
+use Flux\Logger\LoggerInterface;
+use Banzai\Core\Application;
+use Banzai\Http\FileResponse;
+use Banzai\Renderers\RenderersGateway;
+use Banzai\Domain\Pictures\PicturesGateway;
 
-/**
- * Class VideosGateway
- * @package Banzai\Domain\Videos
- */
 class VideosGateway
 {
-    const VIDEO_TABLE = 'videos';
+    const string VIDEO_TABLE = 'videos';
 
     public function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger, protected PicturesGateway $PicturesGateway)
     {
     }
 
     /**
-     * holt einen Videodatensatz aus der Datenbank zu einer Kategorie und einer URL
-     *
-     * @param int $catid
-     * @param string $content
-     * @param string $ext
-     * @return int
+     * retrieves a video record from the database for a category and a URL
      */
     public function getVideoIDFromURL(int $catid = 0, string $content = '', string $ext = ''): int
     {
@@ -125,6 +114,7 @@ class VideosGateway
 
     }
 
+    #[NoReturn]
     public function sendVideo(int $att_id): void
     {
         $row = $this->getVideoHeaderData($att_id);
@@ -139,25 +129,15 @@ class VideosGateway
         exit (0);
     }
 
-
-    /**
-     * @param int $att_id
-     * @return array
-     */
     public function getVideo(int $att_id): array
     {
         return $this->db->get('SELECT * FROM ' . self::VIDEO_TABLE . ' WHERE id=?', array($att_id));
     }
 
-    /**
-     * @param int $kategid
-     * @param int $langid
-     * @return array
-     */
     public function getTeaserlist(int $kategid, int $langid = 0): array
     {
 
-        global $my_preview; // TODO global entfernen und zu Übergabeparameter machen
+        global $my_preview; // TODO replace
 
         $ret = array();
 
@@ -184,14 +164,10 @@ class VideosGateway
         return $ret;
     }
 
-    /**
-     * @param int $id
-     * @return array
-     */
     public function getVideoInfo(int $id): array
     {
 
-        // alles ausser field content !
+        // everything except field content !
         $sql = 'SELECT id,fullurl,objclass,article_id,language_id,author_id,categories_id,asize,url,title,descr,active,mimea,mimeb' . ',lastchange,teaser_template,image_id,descr_type,width,height FROM ' . self::VIDEO_TABLE . ' WHERE id=?';
 
         $item = $this->db->get($sql, array($id));
@@ -199,14 +175,11 @@ class VideosGateway
         if (empty($item))
             return array();
 
-        // $caturl = \Banzai\Core\Application::get(\Banzai\Domain\Folders\FoldersGateway::class)->getFullFolderURL($item ['categories_id']);
-        // $item ['fullurl'] = $caturl . $item ['url'];
-
         if (empty ($item ['object_template']))
             $item ['object_template'] = 'video';
 
         if ($item ['image_id'] > 0) {
-            $pida = $this->PicturesGateway->getPictureLinkdata($item ['image_id'], 0, 0);
+            $pida = $this->PicturesGateway->getPictureLinkdata($item ['image_id']);
             $item ['pic_url'] = $pida ['pic_url'];
             $item ['pic_alt'] = $pida ['pic_alt'];
             $item ['pic_width'] = $pida ['pic_width'];
@@ -219,7 +192,6 @@ class VideosGateway
 
         return $item;
     }
-
 
     public function createStorageName(int $id, string $extension = ''): string
     {
@@ -234,7 +206,7 @@ class VideosGateway
             if (!mkdir($fullpath, 0777, true)) {
                 $this->logger->error('can not create directory ' . $fullpath);
                 return '';
-            };
+            }
 
         return $subdir . DIRECTORY_SEPARATOR . sprintf('%u', $id) . $extension;
 

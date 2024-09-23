@@ -10,8 +10,8 @@ use Banzai\Http\RequestInterface;
 
 class IPFilter
 {
-    const IPV4FILTER_TABLE = 'ipfilter';        // yes, no "v4" in table name. at the time it was created ipv4 and ip were the same
-    const IP6FILTER_TABLE = 'ip6filter';
+    const string IPV4FILTER_TABLE = 'ipfilter';        // yes, no "v4" in table name. at the time it was created ipv4 and ip were the same
+    const string IP6FILTER_TABLE = 'ip6filter';
 
     function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger)
     {
@@ -60,10 +60,6 @@ class IPFilter
 
         if (!$ipblocked) {
             $_SESSION['ip_access_perm_code'] = $entry['ip_access_perm_code'];   // TODO ???
-            // if ((empty($permobj)) && (!empty($rec['ip_access_perm_code']))) {
-            //     $permobj = array();
-            //    $permobj[$rec['ip_access_perm_code']] = $rec['ip_access_perm_code'];
-            // }
             return $this->FilterResponseFactory(false, $donttrace);
         }
 

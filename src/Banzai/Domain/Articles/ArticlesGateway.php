@@ -5,17 +5,16 @@ namespace Banzai\Domain\Articles;
 
 use Exception;
 use DOMDocument;
-
-use Banzai\Core\Application;
+use Twig\Environment as Twig;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
 use Flux\Config\Config;
+use Banzai\Core\Application;
 use Banzai\Domain\Pictures\PicturesGateway;
 use Banzai\Domain\Folders\FoldersGateway;
 use Banzai\Http\Routing\RouteProviderInterface;
 use Banzai\Renderers\RenderersGateway;
 use Banzai\I18n\Locale\LocaleServiceInterface;
-use Twig\Environment as Twig;
 
 use const COMMENTS_TABLE;
 
@@ -48,10 +47,6 @@ use function send_commentmail;
 
 // Todo remove
 
-/**
- * Class ArticlesGateway
- * @package Banzai\Domain\Articles
- */
 class ArticlesGateway
 {
     const ART_TABLE = 'article';
@@ -73,13 +68,8 @@ class ArticlesGateway
     }
 
     /**
-     * Liefert die ArtikelId eines Artikels zu einer Url und einem Ordner
-     * Wenn nicht gefunden, dann 0
-     *
-     * @param string $url
-     * @param int $catid
-     * @param bool $all
-     * @return int
+     * Returns the article ID of an article for a URL and a folder
+     * If not found, then 0
      */
     public function getArticleIDFromURL(string $url = '', int $catid = 0, bool $all = false): int
     {
@@ -113,12 +103,6 @@ class ArticlesGateway
 
     }
 
-
-    /**
-     * @param int $folderid
-     * @param bool $ignoreActiveState
-     * @return array
-     */
     public function getIndexArticle(int $folderid = 0, bool $ignoreActiveState = false): array
     {
 
@@ -141,15 +125,6 @@ class ArticlesGateway
 
     }
 
-
-    /**
-     * @param string $url
-     * @param int $folderid
-     * @param string $ext
-     * @param bool $ignoreActiveState
-     * @param bool $noindex
-     * @return array
-     */
     public function getArticleFromURL(string $url = '', int $folderid = 0, string $ext = 'html', bool $ignoreActiveState = false, bool $noindex = true): array
     {
 
@@ -183,12 +158,6 @@ class ArticlesGateway
         return $this->transformArticleToShow($row);
     }
 
-
-    /**
-     * @param int $id
-     * @param bool $isdebug
-     * @return int
-     */
     public function importRSSFeed(int $id, bool $isdebug = false): int
     {
 
@@ -210,7 +179,7 @@ class ArticlesGateway
             $this->logger->debug('URL: ' . $tb ['feedurl'], $context);
 
         $resp = getHTTPpage($tb ['feedurl'], 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1.', false, '', 'GET', array(), true, '', false);
-        //Todo liegt momentan in functions
+
 
         if (!isset($resp['status'])) {
             $this->logger->error('CURL-Fehler: status is not set', $context);
@@ -346,24 +315,12 @@ class ArticlesGateway
 
 
     /**
-     * Elemente/Artikel eines Ordners ausgeben. Standardfunktion von c_default
-     *
-     * @param int $catid
-     * @param array|null $sarr
-     * @param int|null $tiefe
-     * @param string|null $was
-     * @param int|null $actid
-     * @param int|null $language_id
-     * @param array|null $locatobj
-     * @param int $count
-     * @param bool $withdatekey
-     * @param int $authorid
-     * @return array
+     * Display elements/articles of a folder. Standard function of c_default
      */
     public function getTeaserlist(?int $catid, ?array $sarr = array(), ?int $tiefe = 0, ?string $was = 'list', ?int $actid = 0, ?int $language_id = 0, ?array $locatobj = array(), int $count = 0, bool $withdatekey = false, int $authorid = 0): array
     {
-        global $userobj;    // TODO global eliminieren
-        global $my_preview; // TODO global eliminieren
+        global $userobj;    // TODO eliminate
+        global $my_preview; // TODO eliminate
 
         if (is_null($sarr))
             $sarr = array();
@@ -511,11 +468,6 @@ class ArticlesGateway
         return $ret;
     }
 
-
-    /**
-     * @param int $catid
-     * @return int
-     */
     public function getDefaultArticleID(int $catid = 0): int
     {
         if ($catid < 1)
@@ -536,10 +488,6 @@ class ArticlesGateway
         return $art['article_id'];
     }
 
-
-    /**
-     * @return int
-     */
     public function getLatestBlogpostArticleID(): int
     {
 
@@ -564,11 +512,6 @@ class ArticlesGateway
     }
 
 
-    /**
-     * @param int $catid
-     * @param string|null $ftag
-     * @return int
-     */
     public function getArtIDFromTeaserlabel(int $catid = 0, string $ftag = null): int
     {
 
@@ -599,10 +542,6 @@ class ArticlesGateway
         return $art ['article_id'];
     }
 
-    /**
-     * @param int $art_id
-     * @return string
-     */
     public function getArtURLFromID(int $art_id): string
     {
 
@@ -623,10 +562,6 @@ class ArticlesGateway
 
     }
 
-    /**
-     * @param array $art
-     * @return array
-     */
     public function transformArticleToShow(array $art): array
     {
 
@@ -679,7 +614,7 @@ class ArticlesGateway
 
         if (!defined('INSCCMS_TWIG')) {
 
-            // Falls kein Template angegeben, dann standard-template
+            // If no template is specified, then standard-template
             if (empty ($art ['object_template'])) {
                 if ($art ['objtype'] == 'blogpost')
                     $art ['object_template'] = 'blogpost';
@@ -692,7 +627,7 @@ class ArticlesGateway
         }
 
         if (($art ['image_id'] > 0) && (empty ($art ['pic_url']))) {
-            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['image_id'], 0, 0);//Todo deprecated function
+            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['image_id'], 0, 0); //Todo deprecated function
             $art ['pic_url'] = $pida ['pic_url'];
             $art ['pic_alt'] = $pida ['pic_alt'];
             $art ['pic_width'] = $pida ['pic_width'];
@@ -713,7 +648,7 @@ class ArticlesGateway
             }
 
         if ($art ['author_id'] > 0) {
-            $art ['author_name'] = \Banzai\Domain\Users\UsersGateway::get_user_displayname($art ['author_id']);//Todo liegt momentan in users.php
+            $art ['author_name'] = \Banzai\Domain\Users\UsersGateway::get_user_displayname($art ['author_id']); //Todo is currently in users.php
         }
 
         if (!empty ($art ['keywords'])) {
@@ -723,13 +658,6 @@ class ArticlesGateway
         return ($art);
     }
 
-    /**
-     * @param array $art
-     * @param string $atype
-     * @param null $noshow
-     * @param string $linktext
-     * @return array|false|string
-     */
     public function showArticle(array $art, string $atype = 'main', $noshow = null, string $linktext = '')
     {
         global $itemdir;
@@ -758,10 +686,6 @@ class ArticlesGateway
         }
     }
 
-    /**
-     * @param array $art
-     * @return string
-     */
     public function renderTeaser(array $art): string
     {
         if (is_null($this->twig)) {
@@ -785,20 +709,16 @@ class ArticlesGateway
         return '';
     }
 
-    /**
-     * @param int $katid
-     * @return array
-     */
     public function artLine(int $katid): array
     {
 
-        global $language_id; // TODO global entfernen
+        global $language_id; // TODO eliminate
 
 
         $dat = date("Y-m-d");
         $ui = $_SESSION ["s_uid"];
 
-        if ($ui < 1) // Nicht eingeloggt
+        if ($ui < 1) // Not logged in
             $bla = " visible_user<>'login' AND ";
         else
             $bla = " visible_user<>'anon' AND ";
@@ -843,10 +763,6 @@ class ArticlesGateway
 
     }
 
-    /**
-     * @param array $art
-     * @return array
-     */
     public function makeArticleFullURL(array $art): array
     {
 
@@ -856,20 +772,16 @@ class ArticlesGateway
         return $art;
     }
 
-    /**
-     * @param array|null $art
-     * @return array
-     */
     public function transformArticle(?array $art = null): array
     {
 
         if (empty ($art))
             return array();
 
-        // Wir sind Teaser oder ALIAS auf eigenen Artikel
-        // url,fullurl werden ggf. vom anderen Artikel genommen ...
+        // We are teasers or ALIAS on our own article
+        // url, fullurl may be taken from the other article ...
         if (($art['objtype'] == 'teaser') || ($art ['objtype'] == 'alias')) {
-            if (!empty($art['url_external'])) {        // verlinkung in template (navi oder ziel-url) auf diese URL
+            if (!empty($art['url_external'])) {        // link in template (navi or target URL) to this URL
                 $art['fullurl'] = $art['url_external'];
             } else if ($art['objnextid'] > 0) {
                 $nobj = $this->db->get('SELECT url,fullurl FROM ' . self::ART_TABLE . ' WHERE article_id=?', array($art['objnextid']));
@@ -922,8 +834,8 @@ class ArticlesGateway
                 $art ['layout_template'] = 'c_default';
         }
 
-        // Um in der Eingabemaske Klassenpfade mit Punkten eingeben zu koennen
-        // ist mehr allgemein
+        // To be able to enter class paths with dots in the input mask
+        // is more general
         $art ['contentclass'] = str_replace('.', '_', $art ['contentclass']);
 
         $art['description'] = str_replace("\n", '', $art ['description']);
@@ -933,11 +845,6 @@ class ArticlesGateway
         return $art;
     }
 
-
-    /**
-     * @param int $artid
-     * @return array
-     */
     public function getArticle(int $artid = 0): array
     {
 
@@ -953,11 +860,6 @@ class ArticlesGateway
 
     }
 
-    /**
-     * @param array|null $blogart
-     * @param string|null $prevnext
-     * @return array
-     */
     public function getNextBlogArt(array $blogart = null, string $prevnext = null): array
     {
 
@@ -1008,10 +910,6 @@ class ArticlesGateway
 
     }
 
-    /**
-     * @param int $catid
-     * @return array
-     */
     public function getArticleRandom(int $catid = 0): array
     {
 
@@ -1039,31 +937,22 @@ class ArticlesGateway
 
 
     /**
-     * Teaser/Artikel eines bestimmtens TAGS suchen und ausgeben
+     * Search for and display teasers/articles of a specific TAG
      *
-     * catid         - ID der Kategorie, wenn 0 dann alle
-     * tags          - semikolon getrennte liste von keywords, oeffentlich sichtabre TAGS
-     * subcl         - wenn null/leer, dann alle, sonst nur teaser
-     * auchleere     - wenn true, werden auch teaser mit leerem keywords-feld angezeigt
-     * nurnewsticker - wenn true werden nur teaser/artikel mit gesetztem newstickerflag angezeigt
-     * language_id   - wenn groesser null, nur artikel/teaser mit dieser laguage_id
-     * teaserkeys    - wenn true, werden die neuen (11.01.07) teaserkeys felder verwendet, sonst die tags
-     * sortorder     - Sortierung der Einträge: 0: Datum absteigend (wie bisher - DESC), 1: Datum aufsteigend (ASC), älteste zuerst
+     * catid - ID of the category, if 0 then all
+     * tags - semicolon separated list of keywords, publicly visible TAGS
+     * subcl - if zero/empty then all, otherwise only teasers
+     * alsoempty - if true, teasers with an empty keywords field are also displayed
+     * onlynewssticker - if true, only teasers/articles with the newssticker flag set are displayed
+     * language_id - if greater than zero, only articles/teasers with this language_id
+     * teaserkeys - if true, the new (11.01.07) teaserkeys fields are used, otherwise the tags
+     * sortorder - sorting of entries: 0: date descending (as before - DESC), 1: date ascending (ASC), oldest first
      *
-     * @param int $catid
-     * @param string|null $tags
-     * @param string|null $subcla
-     * @param bool $auchleere
-     * @param bool $nurnewsticker
-     * @param int|null $language_id
-     * @param bool $teaserkeys
-     * @param int $sortorder
-     * @return array
      */
     public function getTeaserTaglist(int $catid = 0, ?string $tags = '', ?string $subcla = '', bool $auchleere = false, bool $nurnewsticker = false, ?int $language_id = null, bool $teaserkeys = false, int $sortorder = 0): array
     {
 
-        global $my_preview;     // TODO global ersetzen
+        global $my_preview;     // TODO replace
 
         $rarr = array();
 
@@ -1089,7 +978,7 @@ class ArticlesGateway
         foreach ($tagarra as $higg) {
             $hugg = trim($higg);
             if (!empty ($hugg))
-                $tagarr [$hugg] = $hugg; // damit keine doppelten und leeren mehr
+                $tagarr [$hugg] = $hugg; // so no more duplicate and empty
         }
 
         $sql = "SELECT * FROM " . self::ART_TABLE . " WHERE ";
@@ -1175,17 +1064,11 @@ class ArticlesGateway
 
 
     /**
-     * Alle TAGS ausgeben, die in Artikeln verwendet werden
-     *
-     * @param int $catid
-     * @param int $count
-     * @param string $tag
-     * @param string $tagclass
-     * @return array
+     * Display all TAGS used in articles
      */
     public function getTeaserBlogtags(int $catid, int $count = 10, string $tag = '', string $tagclass = 'article'): array
     {
-        global $my_preview; // TODO global entfernen
+        global $my_preview; // TODO replace
 
         $rarr = array();
 
@@ -1246,13 +1129,7 @@ class ArticlesGateway
 
 
     /**
-     * Teaser ausgeben, bei denen newstickerjn gesetzt ist, sonst wie get_teaser_taglist
-     *
-     * @param int $catid
-     * @param string $tags
-     * @param string $subcla
-     * @param bool $auchleere
-     * @return array
+     * Display teasers where newstickerjn is set, otherwise like get_teaser_taglist
      */
     public function getTeaserNewslist(int $catid, string $tags, string $subcla = '', $auchleere = false): array
     {
@@ -1260,15 +1137,7 @@ class ArticlesGateway
     }
 
     /**
-     * Artikel/Teaser eines Blog-Archiv-Zeitraumes Monat/Jahr ausgeben z.B. fuer RSS-Feed
-     *
-     * @param int $catid
-     * @param int $year
-     * @param int $month
-     * @param int $feedid
-     * @param bool $onlyfeed
-     * @param bool $defaultfeed
-     * @return int
+     * Output article/teaser of a blog archive period month/year e.g. for RSS feed
      */
     public function getCountBloglist(int $catid, int $year = 0, int $month = 0, int $feedid = 0, bool $onlyfeed = false, bool $defaultfeed = true): int
     {
@@ -1278,7 +1147,7 @@ class ArticlesGateway
         $dat = date("Y-m-d H:i:s");
 
 
-        // Archiv-Funktion, nur Artikel eines Monats ...
+        // Archive function, only articles of one month ...
         if (($year > 0) && ($month > 0)) {
             $ys = (string)$year;
             $ms = (string)$month;
@@ -1349,19 +1218,7 @@ class ArticlesGateway
 
     /**
      *
-     * Artikel/Teaser eines Blog-Archiv-Zeitraumes Monat/Jahr ausgeben z.B. fuer RSS-Feed
-     *
-     * @param int $catid
-     * @param int $count
-     * @param int $year
-     * @param int $month
-     * @param int $feedid
-     * @param bool $onlyfeed
-     * @param bool $defaultfeed
-     * @param int $limitstart
-     * @param int $limitende
-     * @param bool $allbutindex
-     * @return array
+     * Output article/teaser of a blog archive period month/year e.g. for RSS feed
      */
     public function getTeaserBloglist(int $catid, int $count = 10, int $year = 0, int $month = 0, int $feedid = 0, bool $onlyfeed = false, bool $defaultfeed = true, int $limitstart = 0, int $limitende = 0, bool $allbutindex = false): array
     {
@@ -1411,7 +1268,7 @@ class ArticlesGateway
 
         }
 
-        // Archiv-Funktion, nur Artikel eines Monats ...
+        // Archive function, only articles of one month ...
         if ((!empty ($expdat)) && (!empty ($sdat))) {
             $sql .= " a.verfassdat>=:sdat AND ";
             $binding['sdat'] = $sdat;
@@ -1463,12 +1320,8 @@ class ArticlesGateway
 
 
     /**
-     *  Die Monate ausgeben, in denen Artikel vorhanden sind
+     *  Display the months in which items are available
      *
-     * @param int $catid
-     * @param bool $onlyblog
-     * @param bool $sortreverse
-     * @return array
      */
     public function getBlogDateArchivlist(int $catid, bool $onlyblog = true, bool $sortreverse = false): array
     {
@@ -1516,7 +1369,7 @@ class ArticlesGateway
             return array();
 
         foreach ($qart as $art) {
-            $erg ['name'] = meinBlogArchivDatum($art ['jahr'], $art ['monat']);//Todo liegt momentan in functions
+            $erg ['name'] = meinBlogArchivDatum($art ['jahr'], $art ['monat']);//Todo is currently in functions
             $erg ['url'] = $art ['jahr'] . '-' . $art ['monat'];
             $rarr [] = $erg;
         }
@@ -1526,15 +1379,7 @@ class ArticlesGateway
 
 
     /**
-     *Artikel/Teaser einer einfachen Suche zurückgeben
-     *
-     * @param int $catid
-     * @param string $suchwort
-     * @param int $limit
-     * @param string $sorti
-     * @param int $languageid
-     * @param bool $withall
-     * @return array
+     * Return article/teaser from a simple search
      */
     public function getTeaserSearchlist(int $catid, string $suchwort, int $limit = 0, string $sorti = 'datedesc', int $languageid = 0, bool $withall = false): array
     {
@@ -1629,11 +1474,7 @@ class ArticlesGateway
 
 
     /**
-     * Unterartikel eines Haupt-Artikels ausgeben
-     *
-     * @param int $main_article_id
-     * @param int $maxcount
-     * @return array
+     * Display sub-articles of a main article
      */
     public function getArticleMultilist(int $main_article_id, int $maxcount = 30): array
     {
@@ -1663,10 +1504,7 @@ class ArticlesGateway
     }
 
     /**
-     * Kommentarfunktion. Anzahl aktualisieren
-     *
-     * @param int $article_id
-     * @return void
+     * Comment function. Update number
      */
     public function updateCommentCount(int $article_id): void
     {
@@ -1700,12 +1538,8 @@ class ArticlesGateway
 
 
     /**
-     * Alle Kommentare eines Artikels holen
+     * Get all comments of an article
      *
-     * @param $artid
-     * @param int $anzahl
-     * @param string $type
-     * @return array
      */
     public function getArticleComments(int $artid, int $anzahl = 0, string $type = ''): array
     {
@@ -1740,9 +1574,9 @@ class ArticlesGateway
         $objurl = '';
 
         foreach ($qart as $comm) {
-            $comm ['comment_text'] = \Banzai\Renderers\RenderersGateway::RenderText($comm ['comment_text'], $comm ['comment_text_type']);//Todo liegt momentan in render.php
+            $comm ['comment_text'] = RenderersGateway::RenderText($comm ['comment_text'], $comm ['comment_text_type']);//Todo is currently in renders
             $comm ['comment_short'] = limit_string(strip_tags(str_replace('<br />', ' ', $comm ['comment_text'])), 70);
-            //Todo limit_string liegt momentan in functions.php
+            //Todo is currently in functions.php
 
             if ($comm ['approved'] == 'yes')
                 $nofo = '';
@@ -1770,22 +1604,15 @@ class ArticlesGateway
 
 
     /**
-     * Kommentar zu einem Artikel hinzufügen
+     * Add a comment to an article
      *
-     * @param int $article_id
-     * @param string $author
-     * @param string $email
-     * @param string $url
-     * @param string $comment
-     * @param string $sendmail
-     * @return void;
      */
     public function addComment(int $article_id, string $author, string $email, string $url, string $comment, string $sendmail): void
     {
         $userobj = Application::get('user')->getAll();
         $request = Application::get('request');
 
-        // Jetzt den Trackback verarbeiten
+        // Process the trackback now
 
         if (!empty ($url))
             if (substr($url, 0, 4) != 'http')
@@ -1817,22 +1644,18 @@ class ArticlesGateway
 
         $this->updateCommentCount($article_id);
 
-        send_commentmail($article_id, $comment_id, $author, $email, $url, $comment);//Todo liegt momentan in functions
+        send_commentmail($article_id, $comment_id, $author, $email, $url, $comment);//Todo currently in functions
     }
 
 
     /**
-     * ermittelt die URL aufgrund des APP-pathnamens des Artikels
-     * damit koennen besondere Seiten miteinander verlinkt werden
+     * determines the URL based on the APP path name of the article
+     * this allows special pages to be linked to each other without knowing the URL
      *
-     * @param string $pathname
-     * @param int $roleid
-     * @param bool $withdefault
-     * @return string
      */
     public function getURLFromAppPathname(string $pathname = '', int $roleid = -1, bool $withdefault = true): string
     {
-        global $userobj; // TODO globale Variablen eliminieren
+        global $userobj; // TODO replace
 
         if ($roleid == -1)
             $roleid = $userobj['group_id'];

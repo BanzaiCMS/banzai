@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\I18n\Locale;
 
@@ -8,7 +9,6 @@ use Banzai\Http\RequestInterface;
 
 class LocaleService implements LocaleServiceInterface
 {
-    // languages_id 	name 	code 	url 	image_id 	sort_order 	active 	default_lang 	base_categories_id 	home_article_id
 
     protected array $data = array(
         'languages_id' => 1,
@@ -101,48 +101,48 @@ class LocaleService implements LocaleServiceInterface
                 $matches
             );
 
-            // war die Syntax gültig?
+            // Syntax valid?
             if (!$res) {
-                // Nein? Dann ignorieren
+                // No? Then ignore
                 continue;
             }
 
-            // Sprachcode holen und dann sofort in die Einzelteile trennen
+            // Get the language code and then immediately separate it into individual parts
             $lang_code = explode('_', $matches[1]);
 
-            // Wurde eine Qualität mitgegeben?
+            // Was a quality included?
             if (isset($matches[2])) {
-                // die Qualität benutzen
+                // use quality
                 $lang_quality = (float)$matches[2];
             } else {
-                // Kompabilitätsmodus: Qualität 1 annehmen
+                // Compatibility mode: Assume quality 1
                 $lang_quality = 1.0;
             }
 
-            // Bis der Sprachcode leer ist...
+            // Until the language code is empty...
             while (count($lang_code)) {
-                // mal sehen, ob der Sprachcode angeboten wird
+                // let's see if the language code is offered
                 if (in_array(strtolower(join('_', $lang_code)), $allowed_languages)) {
-                    // Qualität anschauen
+                    // View quality
                     if ($lang_quality > $current_q) {
-                        // diese Sprache verwenden
+                        // use this language
                         $current_lang = strtolower(join('_', $lang_code));
                         $current_q = $lang_quality;
-                        // Hier die innere while-Schleife verlassen
+                        // Exit the inner while loop here
                         break;
                     }
                 }
-                // Wenn wir im strengen Modus sind, die Sprache nicht versuchen zu minimalisieren
+                // When we are in strict mode, do not try to minimize the language
                 if ($strict_mode) {
-                    // innere While-Schleife aufbrechen
+                    // break inner while loop
                     break;
                 }
-                // den rechtesten Teil des Sprachcodes abschneiden
+                // cut off the rightmost part of the language code
                 array_pop($lang_code);
             }
         }
 
-        // die gefundene Sprache zurückgeben
+        // return the found language
         return $current_lang;
     }
 
@@ -174,7 +174,7 @@ class LocaleService implements LocaleServiceInterface
         if (is_null($id))
             return '';
 
-        if ($id < 1)    // wenn in objekten keine sprache hinterlegt ist, ist das kein Fehler der geloggt werden müsste
+        if ($id < 1)    // If no language is stored in objects, this is not an error that needs to be logged
             return '';
 
         $data = $this->db->get('SELECT code FROM ' . LocaleServiceInterface::LANG_TABLE . ' WHERE languages_id=?', array($id));
@@ -220,12 +220,12 @@ class LocaleService implements LocaleServiceInterface
         return $ret;
     }
 
-    public function saveinSession()
+    public function saveinSession(): void
     {
         $_SESSION['languageobj'] = $this->data;     // TODO replace $_SESSION usage
     }
 
-    public function getFromSession()
+    public function getFromSession(): void
     {
         if (!empty($_SESSION['languageobj']) && is_array($_SESSION['languageobj']))
             $this->data = $_SESSION['languageobj']; // TODO replace $_SESSION usage

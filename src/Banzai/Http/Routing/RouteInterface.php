@@ -5,10 +5,10 @@ namespace Banzai\Http\Routing;
 
 interface RouteInterface
 {
-    const   NotFoundRedirect301 = 1;
-    const   NotFoundRedirect302 = 2;
-    const   NotfoundCallFolder = 3;
-    const   NotFoundShow404 = 4;
+    const   int NotFoundRedirect301 = 1;
+    const   int NotFoundRedirect302 = 2;
+    const   int NotfoundCallFolder = 3;
+    const   int NotFoundShow404 = 4;
 
     // 'showindex', 'show404', 'redir301', 'redir302'
 

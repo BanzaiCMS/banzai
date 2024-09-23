@@ -14,7 +14,7 @@ use Banzai\Http\RequestInterface;
 
 class DatabaseRouter implements RouteProviderInterface
 {
-    public const ROUTES_PATH_TABLE = 'pathroutes';
+    public const string ROUTES_PATH_TABLE = 'pathroutes';
 
     function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger)
     {

@@ -3,16 +3,15 @@ declare(strict_types=1);
 
 namespace Banzai\Domain\Users;
 
-use Flux\Config\ConfigurationInterface;
-use Banzai\Core\Application;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
+use Flux\Config\ConfigurationInterface;
+use Banzai\Core\Application;
 use Banzai\Domain\Articles\ArticlesGateway;
-use INS\Domain\Tickets\TicketsGateway;
 
 class UsersGateway
 {
-    const USER_TABLE = 'users';
+    const string USER_TABLE = 'users';
 
     static User|null $user = null;
     static DatabaseInterface|null $db = null;
@@ -39,11 +38,8 @@ class UsersGateway
 
     }
 
-
     /**
-     * Liefert zu einer User-ID den vollen Namen (<1. Buchstabe des Vornamens> <Punkt> <Nachname>)
-     * @param int $uid
-     * @return string
+     * Returns the full name of a user ID (<1st letter of first name> <dot> <last name>)
      */
     static function get_userfullname($uid = 0): string
     {
@@ -87,10 +83,6 @@ class UsersGateway
 
     }
 
-    /**
-     * @param int $uid
-     * @return string
-     */
     static function get_user_displayname($uid = 0): string
     {
         self::init();
@@ -106,10 +98,6 @@ class UsersGateway
         return substr($user['user_firstname'], 0, 1) . 'Users ' . $user['user_lastname'];
     }
 
-    /**
-     * @param $uid
-     * @return string
-     */
     static function get_user_profile_url($uid): string
     {
 
@@ -125,10 +113,6 @@ class UsersGateway
             return Application::get(ArticlesGateway::class)->getArtURLFromID($us['profilepage_id']);
     }
 
-    /**
-     * @param $uid
-     * @return mixed|string
-     */
     static function get_userlogin($uid)
     {
 
@@ -143,9 +127,7 @@ class UsersGateway
 
 
     /**
-     * Liefert die Default-Rolle (Benutzergruppe) des Systems oder 0 falls keine gefunden wurde.
-     *
-     * @return int
+     * Returns the default role (user group) of the system or 0 if none was found.
      */
     static function get_default_role(): int
     {
@@ -162,13 +144,8 @@ class UsersGateway
     }
 
 
-// //
-// This function makes a new password from a plaintext password.
     /**
-     * @param $plain
-     * @param $salt
-     * @param bool $saltfirst
-     * @return string
+     * This function makes a new password hash from a plaintext passphrase
      */
     static function encrypt_password_email($plain, $salt, $saltfirst = true)
     {
@@ -178,11 +155,7 @@ class UsersGateway
             return hash('sha256', $plain . $salt);
     }
 
-    /**
-     * @param int $len
-     * @return string
-     */
-    static function create_password($len = 15)
+     static function create_password($len = 15)
     {
         $characterPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_?%$!';    // TODO extend character pool of allowed characters
         $characterPoolLength = strlen($characterPool);
@@ -196,16 +169,6 @@ class UsersGateway
         return $password;
     }
 
-
-    /**
-     * @param $user
-     * @param string $title
-     * @param string $direction
-     * @param string $conftag
-     * @param string $infotext
-     * @param string $userip
-     * @param int $visitid
-     */
     static function log_userinfo($user, $title = '', $direction = '', $conftag = 'syslog', $infotext = '', $userip = '', $visitid = 0)  // make own table "user events" or such, not ticket table !!!
     {
 
@@ -220,7 +183,7 @@ class UsersGateway
         if (empty($ct))
             return;
 
-        // Wenn nicht User sondern custobj uebergeben wurde
+        // If not User but custobj was passed
         if ($user['objclass'] == 'address') {
             $user['address_id'] = $user['adr_id'];
             $user['user_id'] = 0;

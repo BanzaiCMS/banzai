@@ -6,7 +6,6 @@ namespace Banzai\Http\Routing;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
 use Flux\Config\Config;
-
 use Banzai\Domain\Articles\ArticlesGateway;
 use Banzai\Domain\Files\FilesGateway;
 use Banzai\Domain\Folders\FoldersGateway;

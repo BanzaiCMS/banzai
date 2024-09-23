@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 
 namespace Banzai\I18n\Locale;
 
@@ -33,7 +33,7 @@ interface LocaleServiceInterface
 
     public function getID(): int;
 
-    public function saveinSession();
+    public function saveinSession(): void;
 
-    public function getFromSession();
+    public function getFromSession(): void;
 }

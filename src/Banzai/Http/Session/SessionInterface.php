@@ -13,7 +13,7 @@ interface SessionInterface
     /**
      * set a session value
      */
-    public function set(string $name, mixed $value);
+    public function set(string $name, mixed $value): void;
 
     /**
      * checks if an entry with the name is in the storage data
@@ -23,7 +23,7 @@ interface SessionInterface
     /**
      * remove an entry, if it exists
      */
-    public function remove(string $name);
+    public function remove(string $name): void;
 
     /**
      * start the session
@@ -39,7 +39,7 @@ interface SessionInterface
     /**
      * set session id
      */
-    public function setId(string $id);
+    public function setId(string $id): void;
 
     /**
      *  get session name
@@ -49,13 +49,13 @@ interface SessionInterface
     /**
      * set session name
      */
-    public function setName(string $name);
+    public function setName(string $name): void;
 
     /**
      * returns true if a session is already started
      */
     public function isStarted(): bool;
 
-    public function delete();
+    public function delete(): void;
 
 }

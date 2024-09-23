@@ -1,4 +1,5 @@
 <p align="center">
+<a href="https://github.com/BanzaiCMS/banzai/actions/workflows/tests.yml"><img src="https://github.com/BanzaiCMS/banzai/actions/workflows/tests.yml/badge.svg"></a>    
 <a href="https://packagist.org/packages/banzai/banzai"><img src="https://img.shields.io/packagist/v/banzai/banzai" alt="Latest Stable Version"></a>
 <a href=""><img alt="PHP Version" src="https://img.shields.io/packagist/dependency-v/flux/flux/php?server=https%3A%2F%2Fpackagist.org&label=PHP"></a>
 <a href="https://packagist.org/packages/banzai/banzai"><img src="https://img.shields.io/packagist/l/banzai/banzai" alt="License"></a>    

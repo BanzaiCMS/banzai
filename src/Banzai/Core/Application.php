@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Banzai\Core;
 
-use Banzai\Domain\Tagging\TagsGateway;
-use Banzai\Domain\Tickets\TicketsGateway;
 use Twig\Environment as TwigEnvironment;
 use Twig\Loader\FilesystemLoader as TwigFileSystemLoader;
 use Flux\Core\ApplicationInterface;
@@ -29,10 +27,12 @@ use Banzai\Navigation\NavigationGateway;
 use Banzai\Renderers\RenderersGateway;
 use Banzai\Renderers\LegacyWikiText;
 use Banzai\Search\ElasticService;
+use Banzai\Domain\Tagging\TagsGateway;
+use Banzai\Domain\Tickets\TicketsGateway;
 
 class Application extends FluxCoreApplication implements ApplicationInterface
 {
-    protected string $frameworkversion = '6.0.1';
+    protected string $frameworkversion = '6.0.2';
 
     public function getVersion(bool $parent = false): string
     {

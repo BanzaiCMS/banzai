@@ -15,20 +15,7 @@ use Banzai\Domain\Folders\FoldersGateway;
 use Banzai\Http\Routing\RouteProviderInterface;
 use Banzai\Renderers\RenderersGateway;
 use Banzai\I18n\Locale\LocaleServiceInterface;
-
-use const COMMENTS_TABLE;
-
-// Todo remove
-use const FEEDS_TABLE;
-
-// Todo remove
-use const GEOOBJ_TABLE;
-
-// Todo remove
-use const TAGGING_TABLE;
-
-// Todo remove
-use const TAGLIST_TABLE;
+use Banzai\Domain\Tagging\TagsGateway;
 
 // Todo remove
 use function getHTTPpage;
@@ -49,7 +36,11 @@ use function send_commentmail;
 
 class ArticlesGateway
 {
-    const ART_TABLE = 'article';
+    const string ART_TABLE = 'article';
+    const string COMMENTS_TABLE = 'comments';
+    const string TRACKBACK_TABLE = 'trackbacks';
+    const string GEOOBJ_TABLE = 'geo_objects';
+    const string FEEDS_TABLE = 'feeds';
 
     protected RouteProviderInterface $router;
 
@@ -161,7 +152,7 @@ class ArticlesGateway
     public function importRSSFeed(int $id, bool $isdebug = false): int
     {
 
-        $tb = $this->db->get(' SELECT * FROM ' . FEEDS_TABLE . ' WHERE feed_id=?', array($id));
+        $tb = $this->db->get(' SELECT * FROM ' . self::FEEDS_TABLE . ' WHERE feed_id=?', array($id));
 
         $context = array('feedid' => $id);
 
@@ -308,7 +299,7 @@ class ArticlesGateway
 
         $data = array('feed_id' => $tb ['feed_id']);
         $data['updated'] = $this->db->timestamp();
-        $this->db->put(FEEDS_TABLE, $data, array('feed_id'), false);
+        $this->db->put(self::FEEDS_TABLE, $data, array('feed_id'), false);
 
         return $zaehler;
     }
@@ -319,8 +310,9 @@ class ArticlesGateway
      */
     public function getTeaserlist(?int $catid, ?array $sarr = array(), ?int $tiefe = 0, ?string $was = 'list', ?int $actid = 0, ?int $language_id = 0, ?array $locatobj = array(), int $count = 0, bool $withdatekey = false, int $authorid = 0): array
     {
-        global $userobj;    // TODO eliminate
         global $my_preview; // TODO eliminate
+
+        $userobj = Application::get('user')->getAll();
 
         if (is_null($sarr))
             $sarr = array();
@@ -805,7 +797,7 @@ class ArticlesGateway
         }
 
         if ($art ['geoobj'] > 0)
-            $art ['geo'] = $this->db->get('SELECT * FROM ' . GEOOBJ_TABLE . ' WHERE id =?', array($art ['geoobj']));
+            $art ['geo'] = $this->db->get('SELECT * FROM ' . self::GEOOBJ_TABLE . ' WHERE id =?', array($art ['geoobj']));
 
         if (empty ($art ['linktitle']))
             $art ['linktitle'] = $art ['titel2'];
@@ -1079,8 +1071,8 @@ class ArticlesGateway
 
         $binding = array();
 
-        $sql = 'SELECT * FROM ' . self::ART_TABLE . ' a ' . 'JOIN ' . TAGGING_TABLE . ' t ON a.article_id=t.objid '
-            . 'JOIN ' . TAGLIST_TABLE . ' l ON t.tagnameid=l.tagnameid ' . 'WHERE a.feed_enabled="yes" ' . 'AND l.objclass=:tagclass AND l.tagname=:tag';
+        $sql = 'SELECT * FROM ' . self::ART_TABLE . ' a ' . 'JOIN ' . TagsGateway::TAGGING_TABLE . ' t ON a.article_id=t.objid '
+            . 'JOIN ' . TagsGateway::TAGLIST_TABLE . ' l ON t.tagnameid=l.tagnameid ' . 'WHERE a.feed_enabled="yes" ' . 'AND l.objclass=:tagclass AND l.tagname=:tag';
 
         $binding['tagclass'] = $tagclass;
         $binding['tag'] = $tag;
@@ -1513,7 +1505,7 @@ class ArticlesGateway
 
         $binding = array();
         $binding['article_id'] = $article_id;
-        $sql = "SELECT COUNT(*) as anz from " . COMMENTS_TABLE . ' WHERE related_objid=:article_id  AND comment_type="comment" AND (approved="yes" OR approved="reserved" OR approved="yesnofollow") ';
+        $sql = "SELECT COUNT(*) as anz from " . self::COMMENTS_TABLE . ' WHERE related_objid=:article_id  AND comment_type="comment" AND (approved="yes" OR approved="reserved" OR approved="yesnofollow") ';
         $row = $this->db->get($sql, $binding);
 
         if (empty($row))
@@ -1522,7 +1514,7 @@ class ArticlesGateway
         $komm = $row ['anz'];
 
 
-        $sql = "SELECT COUNT(*) as anz from " . COMMENTS_TABLE . ' WHERE related_objid=:article_id AND comment_type="trackback" AND (approved="yes" OR approved="reserved" OR approved="yesnofollow") ';
+        $sql = "SELECT COUNT(*) as anz from " . self::COMMENTS_TABLE . ' WHERE related_objid=:article_id AND comment_type="trackback" AND (approved="yes" OR approved="reserved" OR approved="yesnofollow") ';
         $row = $this->db->get($sql, $binding);
 
         if (empty($row))
@@ -1554,9 +1546,9 @@ class ArticlesGateway
         }
 
         if ($artid == 0) {
-            $sql = "SELECT * from " . COMMENTS_TABLE . ' WHERE ' . $stype . '(approved="yes" OR approved="reserved" OR approved="yesnofollow") ORDER BY create_date ';
+            $sql = "SELECT * from " . self::COMMENTS_TABLE . ' WHERE ' . $stype . '(approved="yes" OR approved="reserved" OR approved="yesnofollow") ORDER BY create_date ';
         } else {
-            $sql = "SELECT * from " . COMMENTS_TABLE . ' WHERE ' . $stype . 'related_objid=:artid  AND (approved="yes" OR approved="yesnofollow" OR approved="reserved") ORDER BY create_date ';
+            $sql = "SELECT * from " . self::COMMENTS_TABLE . ' WHERE ' . $stype . 'related_objid=:artid  AND (approved="yes" OR approved="yesnofollow" OR approved="reserved") ORDER BY create_date ';
             $binding['artid'] = $artid;
         }
 
@@ -1640,7 +1632,7 @@ class ArticlesGateway
         $data['create_date'] = $this->db->timestamp();
         $data['confirm_needed'] = 'no';
 
-        $comment_id = $this->db->add(COMMENTS_TABLE, $data);
+        $comment_id = $this->db->add(self::COMMENTS_TABLE, $data);
 
         $this->updateCommentCount($article_id);
 
@@ -1655,7 +1647,7 @@ class ArticlesGateway
      */
     public function getURLFromAppPathname(string $pathname = '', int $roleid = -1, bool $withdefault = true): string
     {
-        global $userobj; // TODO replace
+        $userobj = Application::get('user')->getAll();
 
         if ($roleid == -1)
             $roleid = $userobj['group_id'];

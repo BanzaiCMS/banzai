@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Banzai\Core;
 
+use Banzai\Domain\Tagging\TagsGateway;
+use Banzai\Domain\Tickets\TicketsGateway;
 use Twig\Environment as TwigEnvironment;
 use Twig\Loader\FilesystemLoader as TwigFileSystemLoader;
 use Flux\Core\ApplicationInterface;
@@ -209,6 +211,20 @@ class Application extends FluxCoreApplication implements ApplicationInterface
                 $di->get('db'),
                 $di->get('logger'),
                 $di->get(PicturesGateway::class)
+            );
+        });
+
+        $di->set(TicketsGateway::class, function () use ($di) {
+            return new TicketsGateway(
+                $di->get('db'),
+                $di->get('logger')
+            );
+        });
+
+        $di->set(TagsGateway::class, function () use ($di) {
+            return new TagsGateway(
+                $di->get('db'),
+                $di->get('logger')
             );
         });
 

@@ -7,7 +7,6 @@ use Flux\Container\ContainerInterface;
 use Banzai\Http\RequestInterface;
 use Banzai\Http\ResponseInterface;
 
-
 interface ControllerInterface
 {
     public static function create(ContainerInterface $container): ControllerInterface;

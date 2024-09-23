@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Banzai\Http;
 
-use Flux\Psr7\Response as Psr7Response;
-use Banzai\Core\Application;
-use Flux\Psr7\TempStream;
-use Banzai\Domain\Blocks\BlocksGateway;
 use Twig\Environment as TwigEnvironment;
+use Flux\Psr7\Response as Psr7Response;
+use Flux\Psr7\TempStream;
+use Banzai\Core\Application;
+use Banzai\Domain\Blocks\BlocksGateway;
 
 class HtmlResponse extends Psr7Response implements ResponseInterface
 {
@@ -53,7 +53,7 @@ class HtmlResponse extends Psr7Response implements ResponseInterface
 
     }
 
-    public function sendContent()
+    public function sendContent(): void
     {
         $body = $this->getBody();
 
@@ -65,7 +65,7 @@ class HtmlResponse extends Psr7Response implements ResponseInterface
 
     }
 
-    public function send()
+    public function send(): void
     {
         $this->sendHeaders();
         $this->sendContent();

@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 namespace Banzai\Http\Controller;
-
 trait ControllerTrait
 {
 

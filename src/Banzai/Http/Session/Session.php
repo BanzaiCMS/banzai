@@ -21,7 +21,7 @@ class Session implements SessionInterface
     /**
      * set a session value
      */
-    public function set(string $name, mixed $value)
+    public function set(string $name, mixed $value): void
     {
         $_SESSION[$name] = $value;
     }
@@ -37,7 +37,7 @@ class Session implements SessionInterface
     /**
      * remove an entry, if it exists
      */
-    public function remove(string $name)
+    public function remove(string $name): void
     {
         if (isset($_SESSION[$name]))
             unset ($_SESSION[$name]);
@@ -67,7 +67,7 @@ class Session implements SessionInterface
     /**
      * set session name
      */
-    public function setName(string $name)
+    public function setName(string $name): void
     {
         session_name($name);
         $this->name = $name;
@@ -84,7 +84,7 @@ class Session implements SessionInterface
     /**
      * set session id
      */
-    public function setId(string $id)
+    public function setId(string $id): void
     {
         session_id($id);
     }
@@ -98,7 +98,7 @@ class Session implements SessionInterface
      * deletes the current session including data and cookies
      * for a new session, session->start() has to be called
      */
-    public function delete()
+    public function delete(): void
     {
 
         // clear data

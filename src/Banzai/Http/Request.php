@@ -4,10 +4,8 @@ declare(strict_types=1);
 namespace Banzai\Http;
 
 use Psr\Http\Message\StreamInterface;
-
 use Flux\Psr7\ServerInputStream;
 use Flux\Psr7\ServerRequest as FluxServerRequest;
-
 use Banzai\Core\Application;
 use Banzai\I18n\Locale\LocaleServiceInterface;
 use Banzai\Http\Session\SessionInterface;

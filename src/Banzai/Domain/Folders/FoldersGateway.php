@@ -3,34 +3,24 @@ declare(strict_types=1);
 
 namespace Banzai\Domain\Folders;
 
+use Banzai\Core\Application;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
-
 use Banzai\Domain\Videos\VideosGateway;
 use Banzai\Domain\Articles\ArticlesGateway;
 use Banzai\Domain\Files\FilesGateway;
 use Banzai\Domain\Pictures\PicturesGateway;
 use Banzai\Domain\Products\ProductsGateway;
 
-
-/**
- * Class FoldersGateway
- * @package Banzai\Domain\Folders
- */
 class FoldersGateway
 {
-    const FOLDER_TABLE = 'categories';
+    const string FOLDER_TABLE = 'categories';
 
     public function __construct(protected ?DatabaseInterface $db = null, protected ?LoggerInterface $logger = null, protected ?ArticlesGateway $articles = null)
     {
     }
 
-    /**
-     * @param DatabaseInterface $db
-     * @param LoggerInterface $logger
-     * @param ArticlesGateway $articles
-     */
-    public function _inject(DatabaseInterface $db, LoggerInterface $logger, ArticlesGateway $articles)
+    public function _inject(DatabaseInterface $db, LoggerInterface $logger, ArticlesGateway $articles): void
     {
         $this->db = $db;
         $this->logger = $logger;
@@ -39,15 +29,10 @@ class FoldersGateway
 
 
     /**
-     * Liefert ein Kategorie/Folder Array zu einer URL
+     * Returns a category/folder array for a URL
      *
-     * Falls $parentid is not null: Kategorie passend zu (parentid,url) holen
-     * Falls $parentid is null : Kategorie passend zu (url) holen (parentid wird ignoriert)
-     *
-     * @param string $url
-     * @param int|null $parentid
-     * @param bool $ignoreActiveState
-     * @return array
+     * If $parentid is not null: get category matching (parentid,url)
+     * If $parentid is null : get category matching (url) (parentid is ignored)
      */
     public function getFolderFromURL(string $url = '', ?int $parentid = null, bool $ignoreActiveState = false): array
     {
@@ -79,19 +64,10 @@ class FoldersGateway
         return $catobj;
     }
 
-
-    /**
-     * @param int $curr_cat_id
-     * @param array $sarr
-     * @param int $tiefe
-     * @param int $maxtiefe
-     * @param null $locatobj
-     * @return array
-     */
     function getTeaserlist(int $curr_cat_id = 0, array $sarr = array(), int $tiefe = 0, int $maxtiefe = 0, $locatobj = null): array
     {
-        global $my_preview;     // TODO global entfernen
-        global $catobj;         // TODO global entfernen
+        global $my_preview;     // TODO replace
+        global $catobj;         // TODO replace
 
         if (!empty($sarr))
             $ret = $sarr;
@@ -123,29 +99,20 @@ class FoldersGateway
         else
             $sorti = 'datedesc';
 
-        switch ($sorti) {
-            case 'alphaasc':
-                $qsort = 'sort_order, categories_name ASC';
-                break;
-            case 'alphadesc':
-                $qsort = 'sort_order, categories_name DESC';
-                break;
-            case 'dateasc':
-                $qsort = 'sort_order, date_added ASC';
-                break;
-            case 'datedesc':
-            default:
-                $qsort = 'sort_order, date_added DESC';
-                break;
-        }
+        $qsort = match ($sorti) {
+            'alphaasc' => 'sort_order, categories_name ASC',
+            'alphadesc' => 'sort_order, categories_name DESC',
+            'dateasc' => 'sort_order, date_added ASC',
+            default => 'sort_order, date_added DESC',
+        };
 
         $sql .= " ORDER BY " . $qsort;
 
         $liste = $this->db->getlist($sql, array($curr_cat_id));
 
         foreach ($liste as $rkat) {
-            if (\Banzai\Core\Application::get('user')->hasPermission($rkat['access_perm_code'])) {
-                // Session-Variable erlaubt auch dieses ...
+            if (Application::get('user')->hasPermission($rkat['access_perm_code'])) {
+                // Session variable also allows this ...
 
                 $artid = $this->articles->getDefaultArticleID($rkat['categories_id']);
 
@@ -153,7 +120,7 @@ class FoldersGateway
                     $reco = $this->db->get('SELECT * FROM ' . ArticlesGateway::ART_TABLE . ' WHERE article_id=?', array($artid));
                     $reco = $this->articles->transformArticle($reco);
                 } else {
-                    // Parameter manuell fuer show_artobj setzen ...
+                    // Set parameters manually for show_artobj ...
                     $reco = array();
                     $reco['url'] = 'index';
                     $reco['categories_id'] = $rkat['categories_id'];
@@ -179,10 +146,6 @@ class FoldersGateway
         return $ret;
     }
 
-    /**
-     * @param array $catobj
-     * @return array
-     */
     public function transformFolder(array $catobj): array
     {
         if (!defined('INSCCMS_TWIG')) {
@@ -193,18 +156,19 @@ class FoldersGateway
             if (empty($catobj['content_template']))
                 $catobj['content_template'] = 'c_default';
 
-            // Brauchen wir noch, weil viele Funktionen davon abhängen
-            // soll aber irgendwann komplett durch define ersetzt werden
-            if (empty($catobj['templates_basedir']))  // Nicht gesetzt
+            // We still need it because many functions depend on it
+            // but it should eventually be completely replaced by define
+
+            if (empty($catobj['templates_basedir']))  // Not set
                 $catobj['templates_basedir'] = 'templates';
 
-            if (empty($catobj['stylesheet'])) // Nicht gesetzt
+            if (empty($catobj['stylesheet'])) // Not set
                 $catobj['stylesheet'] = 'formate.css';
 
         }
 
         if ($catobj['image_id'] > 0) {
-            $pida = \Banzai\Core\Application::get(\Banzai\Domain\Pictures\PicturesGateway::class)->getPictureLinkdata($catobj['image_id'], 0, 0); //Todo deprecated_functions.php
+            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($catobj['image_id'], 0, 0); //Todo deprecated_functions.php
 
             $catobj['pic_url'] = $pida['pic_url'];
             $catobj['pic_alt'] = $pida['pic_alt'];
@@ -212,17 +176,14 @@ class FoldersGateway
             $catobj['pic_height'] = $pida['pic_height'];
             $catobj['pic_subtext'] = $pida['pic_subtext'];
             $catobj['pic_source'] = $pida['pic_source'];
-        };
+        }
 
         return $catobj;
     }
 
 
     /**
-     * Liefert ein Kategorie/Folder Array zu einer catid
-     *
-     * @param int $catid
-     * @return array
+     * Returns a category/folder array for a catid
      */
     function getFolder(int $catid): array
     {
@@ -242,11 +203,6 @@ class FoldersGateway
         return $this->transformFolder($catobj);
     }
 
-
-    /**
-     * @param $cid
-     * @return string
-     */
     function getFolderName($cid): string
     {
         $te = $this->db->get('SELECT categories_name FROM ' . self::FOLDER_TABLE . ' WHERE categories_id=?', array($cid));
@@ -256,10 +212,6 @@ class FoldersGateway
         return $te['categories_name'];
     }
 
-    /**
-     * @param $cid
-     * @return string
-     */
     function getFolderTitle($cid): string
     {
         $te = $this->db->get('SELECT categories_pagetitle FROM ' . self::FOLDER_TABLE . ' WHERE categories_id=?', array($cid));
@@ -269,10 +221,6 @@ class FoldersGateway
         return $te['categories_pagetitle'];
     }
 
-    /**
-     * @param int $cid
-     * @return string
-     */
     function getFolderTemplate(int $cid): string
     {
         $te = $this->db->get('SELECT layout_template FROM ' . self::FOLDER_TABLE . ' WHERE categories_id=?', array($cid));
@@ -282,10 +230,6 @@ class FoldersGateway
         return $te['layout_template'];
     }
 
-    /**
-     * @param int $cid
-     * @return string
-     */
     function getFolderContentTemplate(int $cid): string
     {
         $te = $this->db->get('SELECT content_template FROM ' . self::FOLDER_TABLE . ' WHERE categories_id=?', array($cid));
@@ -295,10 +239,6 @@ class FoldersGateway
         return $te['content_template'];
     }
 
-    /**
-     * @param int $cid
-     * @return int
-     */
     function getFolderImageID($cid): int
     {
         $te = $this->db->get('SELECT image_id FROM ' . self::FOLDER_TABLE . ' WHERE categories_id=?', array($cid));
@@ -309,10 +249,6 @@ class FoldersGateway
     }
 
 
-    /**
-     * @param int $cid
-     * @return string
-     */
     function getFolderOnlyDefaultArticle($cid): string
     {
         $te = $this->db->get('SELECT only_default_art FROM ' . self::FOLDER_TABLE . ' WHERE categories_id=?', array($cid));
@@ -322,11 +258,6 @@ class FoldersGateway
         return $te['only_default_art'];
     }
 
-    /**
-     * @param string $curl
-     * @param int $lid
-     * @return int
-     */
     function getFolderID(string $curl, int $lid): int
     {
 
@@ -346,10 +277,7 @@ class FoldersGateway
     }
 
     /**
-     * erzeugt eine URL aus einer Kategorie-ID
-     *
-     * @param int $cid
-     * @return string
+     * generates a URL from a category ID
      */
     function getFullFolderURL(int $cid = 0): string
     {
@@ -367,11 +295,6 @@ class FoldersGateway
         return $rkat['fullurl'];
     }
 
-
-    /**
-     * @param array $rkat
-     * @return string
-     */
     function makeFullFolderURL(array $rkat = array()): string
     {
         if (empty($rkat)) {
@@ -382,12 +305,6 @@ class FoldersGateway
         return $rkat['fullurl'];
     }
 
-
-
-    /**
-     * @param int $langid
-     * @return int
-     */
     function getMenueRoot(int $langid): int
     {
         $sql = 'SELECT  categories_id FROM ' . self::FOLDER_TABLE . ' WHERE parent_id=? AND language_id=?';
@@ -402,10 +319,7 @@ class FoldersGateway
 
 
     /**
-     * Liefert die Parent-ID zur aktuellen Kategorie
-     *
-     * @param int $kat_id
-     * @return int
+     * Returns the parent ID for the current category
      */
     function getParentFolderID(int $kat_id = 0): int
     {
@@ -422,14 +336,11 @@ class FoldersGateway
         return (int)$rkat['parent_id'];
     }
 
-// Liefert die oberste Kategorie-ID (im Kategoriebaum)
-// Unterhalb der Startkategorie
-// fuer die aktuelle Kategorie
     /**
-     * @param int $kat_id
-     * @return int
+     * Returns the topmost category ID (in the category tree)
+     * Below the start category
+     * for the current category
      */
-
     function getTopFolderIDFromFolder(int $kat_id): int
     {
         if ($kat_id < 1)
@@ -445,13 +356,6 @@ class FoldersGateway
         return $this->getTopFolderIDFromFolder($parent);
     }
 
-    /**
-     * @param $actid
-     * @param $parentid
-     * @param $treetype
-     * @param $rekursion
-     * @return bool
-     */
     function folderCheckRekursion($actid, $parentid, $treetype, $rekursion): bool
     {
         if ($rekursion < 1)
@@ -478,11 +382,8 @@ class FoldersGateway
 
 
     /**
-     * Liefert zu einer Kategorie alle enthaltenen Elemente als Array
-     * Falls keine Elemente in Kategorie, dann returnwert leer
-     *
-     * @param int $catid
-     * @return array
+     * Returns all elements contained in a category as an array
+     * If there are no elements in the category, then return value is empty
      */
     function countFolderElements($catid = 0): array
     {

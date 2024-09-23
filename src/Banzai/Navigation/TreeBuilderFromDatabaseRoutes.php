@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace Banzai\Navigation;
 
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Flux\Container\ContainerInterface;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
 use Banzai\Domain\Users\User;
 use Banzai\Http\Routing\DatabaseRouter;
 use Banzai\Http\Routing\RouteProviderInterface;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 
 class TreeBuilderFromDatabaseRoutes implements TreeBuilderInterface

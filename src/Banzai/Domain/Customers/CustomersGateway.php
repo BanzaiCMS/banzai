@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Domain\Customers;
 
@@ -6,35 +7,30 @@ use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
 use Banzai\Authentication\Permissions;
 use Banzai\Domain\Countries\CountriesGateway;
-use INS\Domain\Finance\FinanceGateway;          // TODO
 use Banzai\Domain\Users\UsersGateway;
 
 class CustomersGateway
 {
-    const CUSTOMER_TABLE = 'addresses';
-    const CUSTOMER_GROUP_TABLE = 'customers_groups';
-    const CUSTOMER_OCCUPATION_TABLE = 'addresses_occupation';
-    const CUSTOMER_SOURCE_TABLE = 'addresses_sources';
-    const CUSTOMER_OPTION_TABLE = 'addresses_options';
+    const string CUSTOMER_TABLE = 'addresses';
+    const string CUSTOMER_GROUP_TABLE = 'customers_groups';
+    const string CUSTOMER_OCCUPATION_TABLE = 'addresses_occupation';
+    const string CUSTOMER_SOURCE_TABLE = 'addresses_sources';
+    const string CUSTOMER_OPTION_TABLE = 'addresses_options';
 
-    const CUSTOMER_OPTION_TYPE_TABLE = 'addresses_optiontypes';
-    const CUSTOMER_VATLOG_TABLE = 'addresses_vatlog';
-    const CUSTOMER_USER_STATE_TABLE = 'addresses_user_states';
-    const CUSTOMER_DELIVERY_TABLE = 'addresses_delivery';
-    const CUSTOMER_ADDRESS_TABLE = 'addresses_address';
+    const string CUSTOMER_OPTION_TYPE_TABLE = 'addresses_optiontypes';
+    const string CUSTOMER_VATLOG_TABLE = 'addresses_vatlog';
+    const string CUSTOMER_USER_STATE_TABLE = 'addresses_user_states';
+    const string CUSTOMER_DELIVERY_TABLE = 'addresses_delivery';
+    const string CUSTOMER_ADDRESS_TABLE = 'addresses_address';
 
-    const BUDGET_TABLE = 'budgets';     // also in FinanceGateway
+    const string BUDGET_TABLE = 'budgets';     // also in FinanceGateway
+    const string PAYMENT_TERMS_TABLE = 'payment_terms'; // from constants
 
     public function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger)
     {
     }
 
-
-    /**
-     * @param $adrid
-     * @return string
-     */
-    public static function get_adr_name($adrid)
+    public static function get_adr_name($adrid): string
     {
         global $db;
 
@@ -50,14 +46,6 @@ class CustomersGateway
         return $name;
     }
 
-
-    /**
-     * @param $adrstateid
-     * @param int $adrid
-     * @param int $userid
-     * @param bool $manuell
-     * @return bool
-     */
     public static function set_adr_user_status($adrstateid, int $adrid = 0, int $userid = 0, bool $manuell = false): bool
     {
         global $db;
@@ -73,7 +61,7 @@ class CustomersGateway
                 if (!empty($st))
                     $adrstateid = $st['adruser_state_id'];
                 else {
-                    $logger->error('adrstateid(' . $adrstateid . ') Code nicht gefunden.');
+                    $logger->error('adrstateid(' . $adrstateid . ') code not found.');
                     return false;
                 }
             }
@@ -92,11 +80,11 @@ class CustomersGateway
         $status = $db->get('SELECT * FROM ' . self::CUSTOMER_USER_STATE_TABLE . ' WHERE adruser_state_id=?', array($adrstateid));
 
         if (empty($status)) {
-            $logger->error('Adress-Status ID ' . $adrstateid . ' nicht gefunden.');
+            $logger->error('Adress-Status ID ' . $adrstateid . ' not found.');
             return false;
         }
 
-        // Adresse setzen ...
+        // set address
         if (($status['adruser_scope'] == 'adr') || ($status['adruser_scope'] == 'all')) {
             $neu = array();
 
@@ -121,7 +109,7 @@ class CustomersGateway
             }
         }
 
-        // User setzen
+        // set user
         if (($status['adruser_scope'] == 'user') || ($status['adruser_scope'] == 'all')) {
             $neu = array();
             $neu['adruser_state_id'] = $status['adruser_state_id'];
@@ -154,7 +142,7 @@ class CustomersGateway
                 $oki = $db->put(UsersGateway::USER_TABLE, $data, array('user_id'));
                 if (!$oki) {
                     $soki = false;
-                    $logger->error('db->put hat nicht geklappt in \Banzai\Domain\Users\UsersGateway::USER_TABLE bei id=' . $us['user_id']);
+                    $logger->error('db->put did not work in \Banzai\Domain\Users\UsersGateway::USER_TABLE at id=' . $us['user_id']);
                 }
             }
 
@@ -184,11 +172,7 @@ class CustomersGateway
         return $optarr;
     }
 
-    /**
-     * @param int $adrid
-     * @param string $optioncode
-     */
-    public static function clear_address_option($adrid = 0, $optioncode = '')
+    public static function clear_address_option($adrid = 0, $optioncode = ''): void
     {
         global $db;
 
@@ -206,13 +190,9 @@ class CustomersGateway
         }
     }
 
-    /**
-     * @param int $adrid
-     * @param string $optioncode
-     */
-    public static function set_address_option($adrid = 0, $optioncode = '')
+    public static function set_address_option($adrid = 0, $optioncode = ''): void
     {
-        global $db;
+        global $db;     // TODO replace
 
         if ($adrid < 1)
             return;
@@ -266,7 +246,7 @@ class CustomersGateway
         if ($cust['budgetid'] > 0) {
             $cust['budget'] = $this->db->get('SELECT * FROM ' . self::BUDGET_TABLE . ' WHERE budgetid=?', array($cust['budgetid']));
 
-            // featurecodes des budgets mit einbauen ...
+            // featurecodes of budgets also include ...
             $bf = $cust['budget']['budgetfeaturecode'];
             if (!empty($bf)) {
                 $bfarr = explode(',', $bf);
@@ -277,11 +257,11 @@ class CustomersGateway
             }
         }
 
-        // feature-code land
+        // feature-code country
         if ($cust['adr_countryid'] > 0) {
             $cust['country'] = $this->db->get('SELECT * FROM ' . CountriesGateway::COUNTRY_TABLE . ' WHERE countries_id=?', array($cust['adr_countryid']));
 
-            // featurecodes des Landes mit einbauen ...
+            // include featurecodes of country  ...
             $bf = $cust['country']['countries_featurecode'];
             if (!empty($bf)) {
                 $bfarr = explode(',', $bf);
@@ -315,22 +295,15 @@ class CustomersGateway
         return $this->db->getlist($sql, array($CustomerID));
     }
 
-    /**
-     * @param int $adrid
-     * @param array $cust
-     * @return int
-     */
-    public static function get_gracetime_days($adrid = 0, $cust = array())
+    public static function get_gracetime_days($adrid = 0, $cust = array()): int
     {
-        global $db;
-
-        $ret = array();
+        global $db; // TODO remove global
 
         if (!empty($cust))
             $adrid = $cust['adr_id'];
 
         if ($adrid == 0) {
-            $ret = $db->get('SELECT * FROM ' . PAYMENT_TERMS_TABLE . ' WHERE is_active="yes" AND is_default="yes"');
+            $ret = $db->get('SELECT * FROM ' . self::PAYMENT_TERMS_TABLE . ' WHERE is_active="yes" AND is_default="yes"');
             if (empty($ret))
                 return 0;
         }
@@ -342,12 +315,12 @@ class CustomersGateway
             return 0;
 
         if ($cust['payment_term_id'] > 0) {
-            $ret = $db->get('SELECT * FROM ' . PAYMENT_TERMS_TABLE . ' WHERE payment_term_id=' . $cust['payment_term_id']);
+            $ret = $db->get('SELECT * FROM ' . self::PAYMENT_TERMS_TABLE . ' WHERE payment_term_id=' . $cust['payment_term_id']);
             if (!empty($ret))
                 return $ret['days_of_grace'];
         }
 
-        $ret = $db->get('SELECT * FROM ' . PAYMENT_TERMS_TABLE . ' WHERE is_active="yes" AND is_default="yes"');
+        $ret = $db->get('SELECT * FROM ' . self::PAYMENT_TERMS_TABLE . ' WHERE is_active="yes" AND is_default="yes"');
         if (empty($ret))
             return 0;
         else

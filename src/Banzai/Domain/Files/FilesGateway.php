@@ -1,40 +1,28 @@
 <?php
 declare(strict_types=1);
 
-
 namespace Banzai\Domain\Files;
-
-use Banzai\Core\Application;
-use Banzai\Http\FileResponse;
-
-use Flux\Database\DatabaseInterface;
-use Flux\Logger\LoggerInterface;
-use Banzai\Domain\Folders\FoldersGateway;
-use Banzai\Domain\Pictures\PicturesGateway;
 
 use function date_default_timezone_set;
 use function session_write_close;
+use Flux\Database\DatabaseInterface;
+use Flux\Logger\LoggerInterface;
+use Banzai\Core\Application;
+use Banzai\Http\FileResponse;
+use Banzai\Domain\Folders\FoldersGateway;
+use Banzai\Domain\Pictures\PicturesGateway;
 
-
-/**
- * Class FilesGateway
- * @package Banzai\Domain\Files
- */
 class FilesGateway
 {
-    const FILE_TABLE = 'attachements';
+    const string FILE_TABLE = 'attachements';
 
     public function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger, protected PicturesGateway $PicturesGateway)
     {
     }
 
     /**
-     * holt einen Zusatzdatensatz aus der Datenbank zu einer Kategorie und einer URL
+     * retrieves an additional record from the database for a category and a URL
      *
-     * @param int $catid
-     * @param string $content
-     * @param string $ext
-     * @return int
      */
     public function getFileIDfromURL(int $catid = 0, string $content = '', string $ext = ''): int
     {
@@ -117,9 +105,6 @@ class FilesGateway
         return $ret;
     }
 
-    /**
-     * @param int $att_id
-     */
     public function sendFile(int $att_id): void
     {
 
@@ -138,28 +123,16 @@ class FilesGateway
 
     }
 
-    /**
-     * @param int $att_id
-     * @return array
-     */
     public function getFile(int $att_id): array
     {
         return $this->db->get('SELECT * FROM ' . self::FILE_TABLE . ' WHERE id=?', array($att_id));
     }
 
-    /**
-     * @param $kategid
-     * @param int $langid
-     * @param bool $withdatekey
-     * @param null $locatobj
-     * @param int $count
-     * @return array
-     */
     public function getTeaserlist(int $kategid, int $langid = 0, bool $withdatekey = false, $locatobj = null, int $count = 0): array
     {
-        global $my_preview; // TODO globale Variable entfernen
+        global $my_preview; // TODO remove
 
-        // alles ausser field content !
+        // everything except field content !
         $sql = "SELECT id,objclass,attdatetime,article_id,language_id,author_id,categories_id,asize,url,title,descr,active,mimea,mimeb" . ",lastchange,teaser_template,image_id,descr_type,newwindow FROM " . self::FILE_TABLE . " WHERE categories_id=:kategid";
         $binding = array('kategid' => $kategid);
 
@@ -221,17 +194,12 @@ class FilesGateway
         return $ret;
     }
 
-
-    /**
-     * @param int $id
-     * @return array
-     */
     public function getFileInfo(int $id): array
     {
         if ($id < 1)
             return array();
 
-        // alles ausser field content !
+        // everything except field content !
 
         $sql = 'SELECT id,fullurl,objclass,article_id,language_id,author_id,categories_id,asize,url,title,descr,active,mimea,mimeb,lastchange,teaser_template,object_template,image_id,descr_type,newwindow FROM ' . self::FILE_TABLE . ' WHERE id=?';
         $item = $this->db->get($sql, array($id));
@@ -239,11 +207,8 @@ class FilesGateway
         if (empty ($item))
             return array();
 
-        // $caturl = \Banzai\Core\Application::get(\Banzai\Domain\Folders\FoldersGateway::class)->getFullFolderURL($item['categories_id']);
-        // $item['fullurl'] = $caturl . $item['url'];
-
         if ($item['image_id'] > 0) {
-            $pida = $this->PicturesGateway->getPictureLinkdata($item['image_id'], 0, 0);
+            $pida = $this->PicturesGateway->getPictureLinkdata($item['image_id']);
             $item['pic_url'] = $pida['pic_url'];
             $item['pic_alt'] = $pida['pic_alt'];
             $item['pic_width'] = $pida['pic_width'];
@@ -258,7 +223,6 @@ class FilesGateway
         return $item;
     }
 
-
     public function createStorageName(int $id, string $extension = ''): string
     {
         if (!empty($extension))
@@ -272,7 +236,7 @@ class FilesGateway
             if (!mkdir($fullpath, 0777, true)) {
                 $this->logger->error('can not create directory ' . $fullpath);
                 return '';
-            };
+            }
 
         return $subdir . DIRECTORY_SEPARATOR . sprintf('%u', $id) . $extension;
 

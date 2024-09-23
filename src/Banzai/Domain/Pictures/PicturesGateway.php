@@ -1,5 +1,5 @@
 <?php
-// nicht setzen! wegen mktime und date !! declare(strict_types=1);
+// here we do not set  declare(strict_types=1), we have to update the mktime/ statements first !!
 // TODO strict types conversion and set declare
 
 namespace Banzai\Domain\Pictures;
@@ -7,35 +7,26 @@ namespace Banzai\Domain\Pictures;
 use DateInterval;
 use DateTime;
 use DateTimeZone;
-use Banzai\Core\Application;
+use Exception;
+use JetBrains\PhpStorm\NoReturn;
+use Twig\Environment as Twig;
 use Flux\Database\DatabaseInterface;
 use Flux\Config\Config;
-use Exception;
 use Flux\Logger\LoggerInterface;
+use Banzai\Core\Application;
 use Banzai\Domain\Folders\FoldersGateway;
 use Banzai\Http\FileResponse;
-use Twig\Environment as Twig;
 
-
-/**
- * Class PicturesGateway
- * @package INS\Domain\Images
- */
 class PicturesGateway
 {
-    const PIC_TABLE = 'pictures';
+    const string PIC_TABLE = 'pictures';
 
     public function __construct(protected DatabaseInterface $db, protected LoggerInterface $logger, protected Config $params, protected ?Twig $twig = null)
     {
     }
 
     /**
-     * holt die Bild-ID  aus der Datenbank zu einer Kategorie und einer URL
-     *
-     * @param int $catid
-     * @param string $content
-     * @param string $ext
-     * @return int
+     * gets the image ID from the database for a category and a URL
      */
     public function getPictureIDFromURL(int $catid = 0, string $content = '', string $ext = ''): int
     {
@@ -134,7 +125,8 @@ class PicturesGateway
     }
 
 
-    public function sendPicture(int $pic_id)
+    #[NoReturn]
+    public function sendPicture(int $pic_id): void
     {
 
         $pic = $this->getPictureHeaderData($pic_id);
@@ -143,7 +135,7 @@ class PicturesGateway
 
         $header = $this->getPictureHeader($pic);
 
-        // damit session fuer andere requests frei wird.
+        // to free session for other requests
         session_write_close();
         @ob_end_flush();
 
@@ -152,10 +144,6 @@ class PicturesGateway
 
     }
 
-    /**
-     * @param int $id
-     * @return string
-     */
     public function getPictureURL(int $id = 0, bool $encodeurl = true): string
     {
 
@@ -167,7 +155,6 @@ class PicturesGateway
         $row = $this->db->get('SELECT categories_id,url FROM ' . self::PIC_TABLE . ' WHERE id=?', array($id));
 
         if (empty($row)) {
-            // $this->logger->warning('picture not found for id=' . $id);
             return '';
         }
 
@@ -180,15 +167,6 @@ class PicturesGateway
     }
 
 
-    /**
-     * @param int $id
-     * @param int $wi
-     * @param int $hei
-     * @param null $fullcaturl
-     * @param bool $parent
-     * @param string $absurl
-     * @return array
-     */
     public function getPictureLinkdata(int $id, int $wi = 0, int $hei = 0, $fullcaturl = null, bool $parent = true, string $absurl = 'no'): array
     {
 
@@ -201,7 +179,6 @@ class PicturesGateway
         $row = $this->db->get($sql, array($id));
 
         if (empty ($row)) {
-            // $this->logger->warning('picture not found for id=' . $id);
             return array();
         }
 
@@ -218,19 +195,19 @@ class PicturesGateway
         $ww = $width;
         $hh = $height;
 
-        if (($wi != 0) && ($hei != 0)) { // Feste Groesse vorgeben evtl. in Zukunft hier clipping
+        if (($wi != 0) && ($hei != 0)) { // Specify a fixed size, possibly in the future clipping here
             $ww = $wi;
             $hh = $hei;
         }
 
 
-        if (($wi != 0) && ($hei == 0)) { // Breite Fest Hoehe variieren, Seitenverhaeltnis beibehalten
+        if (($wi != 0) && ($hei == 0)) { // Width Fixed Vary height, maintain aspect ratio
             $faktor = $wi / $width;
             $hh = ( int )($height * $faktor);
             $ww = $wi;
         }
 
-        if (($wi == 0) && ($hei != 0)) { // Breite variabel Hoehe fest , Seitenverhaeltnis beibehalten
+        if (($wi == 0) && ($hei != 0)) { // Width variable, height fixed, aspect ratio maintained
             $faktor = $hei / $height;
             $ww = ( int )($width * $faktor);
             $hh = $hei;
@@ -263,12 +240,7 @@ class PicturesGateway
     }
 
     /**
-     * Liste aller IDs von Galerie-Bildern einer Kategorie ausgeben
-     *
-     * @param int $catid
-     * @param int $maxanzahl
-     * @param string $type
-     * @return array
+     * Display a list of all IDs of gallery images in a category
      */
     public function getGalleryPictureIDs(int $catid = 0, int $maxanzahl = 0, string $type = 'gallery_pic'): array
     {
@@ -290,10 +262,6 @@ class PicturesGateway
         return $this->db->getlist($sql, $binding, '', 'id');
     }
 
-    /**
-     * @param int $catid
-     * @return int
-     */
     public function getRandomPictureID(int $catid = 0): int
     {
 
@@ -315,12 +283,6 @@ class PicturesGateway
             return $row ['id'];
     }
 
-
-    /**
-     * @param int $picid
-     * @param string $absurl
-     * @return string
-     */
     public function getPictureHTML(int $picid = 0, string $absurl = 'no'): string
     {
 
@@ -379,7 +341,7 @@ class PicturesGateway
             if (!mkdir($fullpath, 0777, true)) {
                 $this->logger->error('can not create directory ' . $fullpath);
                 return '';
-            };
+            }
 
         return $subdir . DIRECTORY_SEPARATOR . sprintf('%u', $id) . $extension;
 

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Http\Filter;
 
@@ -9,7 +10,7 @@ class ipv6
      * This will take an IPv6 address written in short form and expand it to include all zeros.
      */
 
-    public static function inet6_expand(string $addr): string
+    public static function inet6_expand(string $addr): string|bool
     {
         /* Check if there are segments missing, insert if necessary */
         if (str_contains($addr, '::')) {
@@ -62,7 +63,7 @@ class ipv6
      *
      * @param integer $prefix
      *            The prefix size, an integer between 1 and 127 (inclusive)
-     * @return string The IPv6 mask address for the prefix size
+     * @return string|bool The IPv6 mask address for the prefix size or false if error
      */
     public static function inet6_prefix_to_mask($prefix): string|bool
     {
@@ -168,7 +169,7 @@ class ipv6
      *            An array containing two strings representing 64-bit integer values
      * @return string An IPv6 address
      */
-    public static function int64_to_inet6(array $val): string
+    public static function int64_to_inet6(array $val): string|bool
     {
         /* Make sure input is an array with 2 numerical strings */
         $result = false;

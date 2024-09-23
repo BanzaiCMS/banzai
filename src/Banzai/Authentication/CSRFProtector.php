@@ -9,9 +9,9 @@ use Banzai\Core\Application;
 
 class CSRFProtector
 {
-    const sessiontokenname = 'banzaicsrftoken';
+    const string sessiontokenname = 'banzaicsrftoken';
 
-    public static function setToken()
+    public static function setToken(): void
     {
         if (!self::isTokenProtectionActive())
             return;
@@ -24,7 +24,7 @@ class CSRFProtector
 
     }
 
-    public static function clearToken()
+    public static function clearToken(): void
     {
         unset($_SESSION[self::sessiontokenname]);
     }

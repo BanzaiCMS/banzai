@@ -15,10 +15,10 @@ use Banzai\Http\Routing\RouteProviderInterface;
 
 class NavigationGateway implements NavigationInterface
 {
-    const NAVIAREA_TABLE = 'naviareas';
-    const TEASERAREA_TABLE = 'teaserareas';
+    const string NAVIAREA_TABLE = 'naviareas';
+    const string TEASERAREA_TABLE = 'teaserareas';
 
-    const NAVENTRIES_TABLE = 'naventries';
+    const string NAVENTRIES_TABLE = 'naventries';
 
     public function __construct(protected DatabaseInterface      $db,
                                 protected LoggerInterface        $logger,

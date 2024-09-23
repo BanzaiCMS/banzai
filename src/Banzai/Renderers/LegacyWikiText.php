@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Renderers;
 
-use Banzai\Core\Application;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
+use Banzai\Core\Application;
 use Banzai\Domain\Articles\ArticlesGateway;
 use Banzai\Domain\Files\FilesGateway;
 use Banzai\Domain\Folders\FoldersGateway;

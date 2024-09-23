@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Banzai\Domain\Blocks;
 
+use function json_decode;
+use Twig\Environment as TwigEnvironment;
 use Flux\Database\DatabaseInterface;
 use Flux\Events\EventDispatcherInterface;
 use Flux\Logger\LoggerInterface;
 use Flux\Config\Config;
 use Banzai\Domain\Users\User;
 use Banzai\Http\KernelEvents;
-use Twig\Environment as TwigEnvironment;
-use function json_decode;
 
 
 class BlocksGateway implements BlocksInterface
 {
-    const   BLOCKS_TABLE = 'content_blocks';
+    const   string BLOCKS_TABLE = 'content_blocks';
 
     protected array $Config = array();
 

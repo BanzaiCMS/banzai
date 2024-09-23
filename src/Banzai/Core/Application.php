@@ -41,7 +41,7 @@ class Application extends FluxCoreApplication implements ApplicationInterface
 
     }
 
-    protected function registerBootstrapParams()
+    protected function registerBootstrapParams(): void
     {
 
         parent::registerBootstrapParams();
@@ -76,7 +76,7 @@ class Application extends FluxCoreApplication implements ApplicationInterface
     }
 
 
-    protected function registerCoreContainerServices()
+    protected function registerCoreContainerServices(): void
     {
         parent::registerCoreContainerServices();
 
@@ -105,7 +105,7 @@ class Application extends FluxCoreApplication implements ApplicationInterface
 
     }
 
-    protected function registerApplicationContainerServices()
+    protected function registerApplicationContainerServices(): void
     {
 
         $di = parent::getContainer();

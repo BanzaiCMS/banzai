@@ -19,16 +19,16 @@ use Banzai\Domain\Users\User as DomainUser;
 class user
 {
 
-    const AUTH_FAIL_UsernameTooShort = 1;
-    const AUTH_FAIL_NoUsername = 2;
-    const AUTH_FAIL_PasswordTooShort = 3;
-    const AUTH_FAIL_PasswordMismatch = 4;
-    const AUTH_FAIL_UserNotActive = 5;
-    const AUTH_FAIL_UserIsBlocked = 6;
-    const AUTH_FAIL_OnlyAllowedOnStaging = 7;
-    const AUTH_FAIL_RoleNotSet = 8;
-    const AUTH_FAIL_RoleNotFound = 9;
-    const AUTH_FAIL_RoleIsBlocked = 10;        // we do not log this as a failed attempt, because it could be blocked because of maintenance (i.e. not an user error)
+    const int AUTH_FAIL_UsernameTooShort = 1;
+    const int AUTH_FAIL_NoUsername = 2;
+    const int AUTH_FAIL_PasswordTooShort = 3;
+    const int AUTH_FAIL_PasswordMismatch = 4;
+    const int AUTH_FAIL_UserNotActive = 5;
+    const int AUTH_FAIL_UserIsBlocked = 6;
+    const int AUTH_FAIL_OnlyAllowedOnStaging = 7;
+    const int AUTH_FAIL_RoleNotSet = 8;
+    const int AUTH_FAIL_RoleNotFound = 9;
+    const int AUTH_FAIL_RoleIsBlocked = 10;        // we do not log this as a failed attempt, because it could be blocked because of maintenance (i.e. not an user error)
 
     protected array $reasons = array(
         self::AUTH_FAIL_UsernameTooShort => "username too short",

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Domain\Users;
 
@@ -6,7 +7,7 @@ use Banzai\Core\Application;
 
 class Helpers
 {
-    const CONTACTYPES_TABLE = 'contacts_types';
+    const string CONTACTYPES_TABLE = 'contacts_types';
 
     /**
      *  temporary helper

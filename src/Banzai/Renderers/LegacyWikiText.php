@@ -751,7 +751,7 @@ class LegacyWikiText
 
                 // $artnum = substr($url,$pos+2);
                 if (function_exists('get_prod_obj_from_id'))    // TODO move function from include to class
-                    $artobj = get_prod_obj_from_id($artnum);
+                    $artobj = get_prod_obj_from_id((int)$artnum);
                 else
                     $artobj = array();
 
@@ -787,7 +787,7 @@ class LegacyWikiText
                 /** @var ArticlesGateway $AG */
                 $ag = Application::get(ArticlesGateway::class);
 
-                $artobj = $ag->getArticle($artnum);
+                $artobj = $ag->getArticle((int)$artnum);
                 if (!empty($artobj)) {
                     $bla = $ag->showArticle($artobj, 'teaser', 'noshow', $ut);
                 }
@@ -799,7 +799,7 @@ class LegacyWikiText
             $pos = strpos($url, "#I");
             if ($pos !== false) {
                 $picid = substr($url, $pos + 2);
-                $bla = Application::get(PicturesGateway::class)->getPictureHTML($picid, $absurlstring);
+                $bla = Application::get(PicturesGateway::class)->getPictureHTML((int)$picid, $absurlstring);
             }
         }
 
@@ -811,7 +811,7 @@ class LegacyWikiText
                 $vidid = substr($url, $pos + 2);
                 /** @var VideosGateway $VideosGateway */
                 $VideosGateway = Application::get('Banzai\Domain\Videos\VideosGateway');
-                $vida = $VideosGateway->getVideoInfo($vidid);
+                $vida = $VideosGateway->getVideoInfo((int)$vidid);
                 if (!empty($vida)) {
                     $inci = $itemdir . $vida ['object_template'] . '.php';
                     $obuf = '';
@@ -853,7 +853,7 @@ class LegacyWikiText
             $pos = strpos($url, "#F");
             if ($pos !== false) {
                 $fid = substr($url, $pos + 2);
-                $pida = Application::get(FilesGateway::class)->getFileInfo($fid);
+                $pida = Application::get(FilesGateway::class)->getFileInfo((int)$fid);
 
                 if (is_array($pida)) {
                     if (!empty ($ut))
@@ -890,7 +890,7 @@ class LegacyWikiText
         }
 
         if (($pos === false) && ($editoki) && (empty ($namespace))) { // Nicht gefunden in in Editor ...
-            $artid = Application::get(ArticlesGateway::class)->getArticleIDFromURL($url, $cat_id);
+            $artid = Application::get(ArticlesGateway::class)->getArticleIDFromURL($url, (int)$cat_id);
 
             if ($artid > 0) {
                 $uti = '#A' . $artid;

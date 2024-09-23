@@ -7,7 +7,9 @@ use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
 use Flux\Config\ConfigurationInterface;
 use Banzai\Core\Application;
+use Banzai\Authentication\Permissions;
 use Banzai\Domain\Articles\ArticlesGateway;
+use Banzai\Domain\Tickets\TicketsGateway;
 
 class UsersGateway
 {
@@ -61,7 +63,7 @@ class UsersGateway
      * @param $uid
      * @return string
      */
-    static function get_user_longname($uid)
+    static function get_user_longname($uid): string
     {
 
         self::init();
@@ -115,11 +117,10 @@ class UsersGateway
 
     static function get_userlogin($uid)
     {
-
         self::init();
 
         $a = self::$db->get('SELECT user_loginname FROM ' . self::USER_TABLE . ' WHERE user_id=' . $uid);
-        if (is_array($a))
+        if (!empty($a))
             return $a['user_loginname'];
         else
             return ' ';
@@ -133,7 +134,7 @@ class UsersGateway
     {
         self::init();
 
-        $rolle = self::$db->get('SELECT id FROM ' . ROLES_TABLE . ' WHERE defaultrole="yes"');
+        $rolle = self::$db->get('SELECT id FROM ' . Permissions::ROLES_TABLE . ' WHERE defaultrole="yes"');
         if (empty($rolle)) {
             self::$logger->error('keine default-rolle gefunden');
             return 0;
@@ -147,7 +148,7 @@ class UsersGateway
     /**
      * This function makes a new password hash from a plaintext passphrase
      */
-    static function encrypt_password_email($plain, $salt, $saltfirst = true)
+    static function encrypt_password_email($plain, $salt, $saltfirst = true): string
     {
         if ($saltfirst)
             return hash('sha256', $salt . $plain);
@@ -155,7 +156,7 @@ class UsersGateway
             return hash('sha256', $plain . $salt);
     }
 
-     static function create_password($len = 15)
+    static function create_password($len = 15): string
     {
         $characterPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_?%$!';    // TODO extend character pool of allowed characters
         $characterPoolLength = strlen($characterPool);
@@ -163,13 +164,13 @@ class UsersGateway
         $password = '';
 
         for ($i = 0; $i < $len; $i++) {
-            $password .= substr($characterPool, ins_rand(0, $characterPoolLength), 1);  // TODO replace ins_rand
+            $password .= substr($characterPool, random_int(0, $characterPoolLength), 1);  // TODO replace ins_rand
         }
 
         return $password;
     }
 
-    static function log_userinfo($user, $title = '', $direction = '', $conftag = 'syslog', $infotext = '', $userip = '', $visitid = 0)  // make own table "user events" or such, not ticket table !!!
+    static function log_userinfo($user, $title = '', $direction = '', $conftag = 'syslog', $infotext = '', $userip = '', $visitid = 0): void  // make own table "user events" or such, not ticket table !!!
     {
 
         self::init();

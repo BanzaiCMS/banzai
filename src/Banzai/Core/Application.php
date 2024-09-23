@@ -27,10 +27,12 @@ use Banzai\Navigation\NavigationGateway;
 use Banzai\Renderers\RenderersGateway;
 use Banzai\Renderers\LegacyWikiText;
 use Banzai\Search\ElasticService;
+use Banzai\Domain\Tagging\TagsGateway;
+use Banzai\Domain\Tickets\TicketsGateway;
 
 class Application extends FluxCoreApplication implements ApplicationInterface
 {
-    protected string $frameworkversion = '6.0.1';
+    protected string $frameworkversion = '6.0.2';
 
     public function getVersion(bool $parent = false): string
     {
@@ -209,6 +211,20 @@ class Application extends FluxCoreApplication implements ApplicationInterface
                 $di->get('db'),
                 $di->get('logger'),
                 $di->get(PicturesGateway::class)
+            );
+        });
+
+        $di->set(TicketsGateway::class, function () use ($di) {
+            return new TicketsGateway(
+                $di->get('db'),
+                $di->get('logger')
+            );
+        });
+
+        $di->set(TagsGateway::class, function () use ($di) {
+            return new TagsGateway(
+                $di->get('db'),
+                $di->get('logger')
             );
         });
 

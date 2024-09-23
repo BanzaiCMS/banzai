@@ -1,22 +1,21 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Authentication\password;
 
-use Banzai\Core\Application;
+use ZxcvbnPhp\Zxcvbn;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
-use ZxcvbnPhp\Zxcvbn;
+use Banzai\Core\Application;
 
 
 class Validator implements ValidatorInterface
 {
 
-
     function __construct(protected ?DatabaseInterface $db = null, protected ?LoggerInterface $logger = null)
     {
 
     }
-
 
     public function verifyPassword(string $password = '', array $userdata = array()): array
     {
@@ -53,9 +52,9 @@ class Validator implements ValidatorInterface
         }
 
         if ($fail)
-            $ret['result'] = (boolean)false;
+            $ret['result'] = false;
         else
-            $ret['result'] = (boolean)true;
+            $ret['result'] = true;
 
         return $ret;
     }

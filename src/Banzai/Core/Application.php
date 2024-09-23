@@ -1,14 +1,13 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Core;
 
-use Banzai\I18n\TranslatorService;
 use Twig\Environment as TwigEnvironment;
 use Twig\Loader\FilesystemLoader as TwigFileSystemLoader;
-
 use Flux\Core\ApplicationInterface;
 use Flux\Core\Core as FluxCoreApplication;
-
+use Banzai\I18n\TranslatorService;
 use Banzai\I18n\Locale\LocaleService;
 use Banzai\Authentication\user;
 use Banzai\Domain\Articles\ArticlesGateway;
@@ -31,7 +30,7 @@ use Banzai\Search\ElasticService;
 
 class Application extends FluxCoreApplication implements ApplicationInterface
 {
-    protected string $frameworkversion = '6.0.0-alpha2';
+    protected string $frameworkversion = '6.0.0-alpha3';
 
     public function getVersion(bool $parent = false): string
     {
@@ -139,8 +138,7 @@ class Application extends FluxCoreApplication implements ApplicationInterface
             );
         });
 
-
-        // Sonderfall für lazy-Injection wegen Circular dependencies
+        // special case for lazy-Injection caused by circular dependencies
         $di->set(FoldersGateway::class, function () use ($di) {
             $proxy = new FoldersGateway();
             $di->setInstance(FoldersGateway::class, $proxy);
@@ -152,7 +150,7 @@ class Application extends FluxCoreApplication implements ApplicationInterface
             return $proxy;
         });
 
-        // Sonderfall für lazy-Injection wegen Circular dependencies
+        // special case for lazy-Injection caused by circular dependencies
         $di->set(ArticlesGateway::class, function () use ($di) {
             $proxy = new ArticlesGateway();
             $di->setInstance(ArticlesGateway::class, $proxy);

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Banzai\Authentication;
 
@@ -160,13 +161,6 @@ class user
 
     /**
      * Logs a user in and sets all global session and system variables/arrays
-     *
-     * @param string|null $uname
-     * @param string|null $upass
-     * @param bool $relogin
-     * @param bool $redirect
-     * @param int|null $suid
-     * @return bool
      */
     public function login(string $uname = null, string $upass = null, bool $relogin = false, bool $redirect = true): bool
     {
@@ -314,7 +308,7 @@ class user
             $ne = $_SESSION["nexturllogout"];
 
             if (empty($ne))
-                if (!empty($_POST['nexturl']))  // TODO sollte hier nicht geprüft werden, ob in $_POST['nexturl'] wirklich eine lokale server-URL steht?
+                if (!empty($_POST['nexturl']))  // TODO maybe check if in $_POST['nexturl'] really is a new URL?
                     $ne = $_POST['nexturl'];
 
             if (empty($ne))
@@ -330,7 +324,7 @@ class user
         Application::get('user')->saveUsertoSession($request->getSession());
         $request->getSession()->delete();
 
-        // Redirekt auf neue Seite
+        // Redirect
         if ($withredirection) {
             RedirectResponse::create($ne)->send();
             exit(0);
@@ -362,7 +356,7 @@ class user
         if ($user['user_blocked'] == 'yes') // User bereits gesperrt, do nothing
             return;
 
-        // fehlversuchzähler eins hochzählen
+        // increment failed attempt counter
         if (($user['user_login_failures'] < $maxfail)) {
             $data = array();
             $data['user_login_failures'] = $user['user_login_failures'] + 1;
@@ -371,23 +365,23 @@ class user
             return;
         }
 
-        if ($maxfail == 0) // keine max-grenze gesetzt, beliebig viele fehlversuche sind erlaubt
+        if ($maxfail == 0) // no maximum of allowed failed attempts
             return;
 
-        // user sperren und zaehler hochsetzen
+        // disable user
         $data = array();
         $data['user_login_failures'] = $user['user_login_failures'] + 1;
         $data['user_id'] = $userid;
         $data['user_blocked'] = 'yes';
         $this->db->put(UsersGateway::USER_TABLE, $data, array('user_id'));
 
-        $user['user_login_failures'] += 1; // auch hier eins hochzählen
+        $user['user_login_failures'] += 1; // here too
         $user['user_blocked'] = 'yes';
 
 
-        // TODO Factory und Interface machen und den ganzen Aufruf durch einen Factory-Aufruf ersetzen
+        // TODO feature request: make a factory that replaces this code
 
-        // Klasse aufrufen
+        // call the class
         $cla = Application::get('config')->get('system.security.auth.maxloginfailure.notification');
         if (empty($cla))
             return;

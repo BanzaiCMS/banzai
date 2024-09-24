@@ -13,7 +13,7 @@ class TranslatorService implements TranslatorServiceInterface
 
     private int $langid = 0;
 
-    private int $fallbacklangid;
+    private int $fallbacklangid = 0;
 
     private array $transdata = array();
 
@@ -60,7 +60,7 @@ class TranslatorService implements TranslatorServiceInterface
     {
 
         if ($langid < 1) {
-            $this->logger->error('langid<');
+            $this->logger->error('langid<1');
             return;
         }
 
@@ -87,7 +87,7 @@ class TranslatorService implements TranslatorServiceInterface
 
         $fallbacklangid = $this->fallbacklangid;
 
-        if ($langid == 0)
+        if ($langid < 1)
             $langid = $this->langid;
 
         if ($langid < 1) {
@@ -146,7 +146,7 @@ class TranslatorService implements TranslatorServiceInterface
             foreach ($replacedata as $feld => $inhalt)
                 $ret = str_replace('{{' . $feld . '}}', $inhalt, $ret);
 
-        return ($ret);
+        return $ret;
     }
 
     public function isPlural($number = 0): bool

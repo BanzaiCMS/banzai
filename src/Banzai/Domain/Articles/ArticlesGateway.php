@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Banzai\Domain\Articles;
 
+use Banzai\Domain\Users\UsersGateway;
 use Exception;
 use DOMDocument;
 use Twig\Environment as Twig;
@@ -17,22 +18,14 @@ use Banzai\Renderers\RenderersGateway;
 use Banzai\I18n\Locale\LocaleServiceInterface;
 use Banzai\Domain\Tagging\TagsGateway;
 
+use function function_exists;
+
 // Todo remove
 use function getHTTPpage;
 
 // Todo remove
-use function limit_string;
-
-// Todo remove
-use function makeSEOCleanURL;
-
-// Todo remove
-use function meinBlogArchivDatum;
-
-// Todo remove
 use function send_commentmail;
 
-// Todo remove
 
 class ArticlesGateway
 {
@@ -41,6 +34,31 @@ class ArticlesGateway
     const string TRACKBACK_TABLE = 'trackbacks';
     const string GEOOBJ_TABLE = 'geo_objects';
     const string FEEDS_TABLE = 'feeds';
+
+    protected const array  weekdaynames = array(
+        'Sonntag',
+        'Montag',
+        'Dienstag',
+        'Mittwoch',
+        'Donnerstag',
+        'Freitag',
+        'Samstag'
+    );
+
+    protected const array monthnames = array(
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember'
+    );
 
     protected RouteProviderInterface $router;
 
@@ -57,6 +75,99 @@ class ArticlesGateway
         $this->params = $params;
         $this->twig = $twig;
     }
+
+    public function getMonthnameYear(int $year = 0, int $month = 0): string
+    {
+        if (($month < 1) || ($month > 12))
+            return '';
+
+        return self::monthnames[$month - 1] . ' ' . $year;
+
+    }
+
+    public function makeSEOCleanURL($url): string
+    {
+        $z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $t = array();
+
+        $sepa = Application::get('config')->get('system.url.wordseparator');
+        if (empty($sepa))
+            $sepa = '-';
+
+        $url = str_replace('ä', 'ae', $url);
+        $url = str_replace('ö', 'oe', $url);
+        $url = str_replace('ü', 'ue', $url);
+        $url = str_replace('Ä', 'ae', $url);
+        $url = str_replace('Ö', 'oe', $url);
+        $url = str_replace('Ü', 'ue', $url);
+        $url = str_replace('ß', 'ss', $url);
+
+        $l = strlen($url);
+        $lc = '';
+
+        if ($l < 1)
+            return '';
+
+        $r = '';
+
+        for ($i = 0; $i < $l; $i++) {
+            $c = substr($url, $i, 1);
+            $pos = strpos($z, $c);
+            if (!($pos === false)) {
+                $r .= $c;
+                $lc = $c;
+                continue;
+            }
+
+            if (!empty($t[$c])) {
+                $r .= $t[$c];
+                $lc = '';
+                continue;
+            }
+
+
+            if ($lc != $sepa) {
+                $r .= $sepa;
+                $lc = $sepa;
+            }
+        }
+
+        $r = trim($r, $sepa);
+        $r = strtolower($r);
+
+        return $r;
+    }
+
+    function limitString(string $stri = '', int $maxlen = 100, string $pofi = ''): string
+    {
+        if (iconv_strlen($stri) <= $maxlen)
+            return $stri;
+
+        $a = explode(' ', $stri);
+        if (!is_array($a))
+            return $stri;
+
+        $maxlen = $maxlen - iconv_strlen($pofi);
+
+        $zaehl = 0;
+        $spack = '';
+        $resi = '';
+
+        foreach ($a as $zeile) {
+            $zeile = trim($zeile);
+            $lenw = iconv_strlen($zeile);
+            if ($lenw == 0)
+                continue;
+
+            if ($maxlen < $zaehl + $lenw)
+                return ($resi . $pofi);
+            $resi = $resi . $spack . $zeile;
+            $zaehl = $zaehl + $lenw + 1;
+            $spack = ' ';
+        }
+        return $resi;
+    }
+
 
     /**
      * Returns the article ID of an article for a URL and a folder
@@ -285,11 +396,11 @@ class ArticlesGateway
             $art ['pagetitle'] = $art ['titel2'];
             $art ['navititel'] = $art ['titel2'];
             $art ['linktitle'] = $art ['titel2'];
-            $art ['url'] = makeSEOCleanURL($url);//Todo liegt momentan in functions
+            $art ['url'] = $this->makeSEOCleanURL($url);
 
             $item = $this->getArticleIDFromURL($art ['url'], $art ['categories_id']);
 
-            if (!empty($item))  // bereits vorhanden, also nicht erneut importieren
+            if (!empty($item))  // already exists, so do not import again
                 continue;
 
             $art['verfassdat'] = $this->db->timestamp();
@@ -361,17 +472,11 @@ class ArticlesGateway
                 $sql .= ' AND language_id=:langid ';
             }
 
-        switch ($was) {
-            case 'list' :
-                $sql .= " AND (visible='list' or visible='all')  ";
-                break;
-            case 'menu' :
-                $sql .= " AND (visible='menu' or visible='all')  ";
-                break;
-            case 'all' :
-            default :
-                $sql .= " AND (visible<>'none') ";
-        }
+        $sql .= match ($was) {
+            'list' => " AND (visible='list' or visible='all')  ",
+            'menu' => " AND (visible='menu' or visible='all')  ",
+            default => " AND (visible<>'none') ",
+        };
 
         $sql .= " AND (main_article_id=0 OR main_article_id=article_id OR main_article_id IS NULL) ";
 
@@ -395,21 +500,12 @@ class ArticlesGateway
         else
             $sorti = 'datedesc';
 
-        switch ($sorti) {
-            case 'alphaasc' :
-                $qsort = 'sort_order, titel2 ASC';
-                break;
-            case 'alphadesc' :
-                $qsort = 'sort_order, titel2 DESC';
-                break;
-            case 'dateasc' :
-                $qsort = 'sort_order, verfassdat ASC';
-                break;
-            case 'datedesc' :
-            default :
-                $qsort = 'sort_order, verfassdat DESC';
-                break;
-        }
+        $qsort = match ($sorti) {
+            'alphaasc' => 'sort_order, titel2 ASC',
+            'alphadesc' => 'sort_order, titel2 DESC',
+            'dateasc' => 'sort_order, verfassdat ASC',
+            default => 'sort_order, verfassdat DESC',
+        };
 
         $sql .= " ORDER BY " . $qsort;
 
@@ -640,7 +736,7 @@ class ArticlesGateway
             }
 
         if ($art ['author_id'] > 0) {
-            $art ['author_name'] = \Banzai\Domain\Users\UsersGateway::get_user_displayname($art ['author_id']); //Todo is currently in users.php
+            $art ['author_name'] = UsersGateway::get_user_displayname($art ['author_id']);
         }
 
         if (!empty ($art ['keywords'])) {
@@ -787,7 +883,7 @@ class ArticlesGateway
         }
 
         if ($art ['image_id'] > 0) {
-            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['image_id'], 0, 0);
+            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['image_id']);
             $art ['pic_url'] = $pida ['pic_url'];
             $art ['pic_alt'] = $pida ['pic_alt'];
             $art ['pic_width'] = $pida ['pic_width'];
@@ -922,9 +1018,8 @@ class ArticlesGateway
         if (empty($row))
             return array();
 
-        $art = $this->transformArticle($row);
+        return $this->transformArticle($row);
 
-        return $art;
     }
 
 
@@ -1361,7 +1456,7 @@ class ArticlesGateway
             return array();
 
         foreach ($qart as $art) {
-            $erg ['name'] = meinBlogArchivDatum($art ['jahr'], $art ['monat']);//Todo is currently in functions
+            $erg ['name'] = $this->getMonthnameYear($art ['jahr'], $art ['monat']);
             $erg ['url'] = $art ['jahr'] . '-' . $art ['monat'];
             $rarr [] = $erg;
         }
@@ -1428,21 +1523,12 @@ class ArticlesGateway
         $binding['suchwort2'] = '%' . $suchwort . '%';
         $binding['suchwort3'] = '%' . $suchwort . '%';
 
-        switch ($sorti) {
-            case 'alphaasc' :
-                $qsort = 'a.sort_order, a.titel2 ASC';
-                break;
-            case 'alphadesc' :
-                $qsort = 'a.sort_order, a.titel2 DESC';
-                break;
-            case 'dateasc' :
-                $qsort = 'a.sort_order, a.verfassdat ASC';
-                break;
-            case 'datedesc' :
-            default :
-                $qsort = 'a.sort_order, a.verfassdat DESC';
-                break;
-        }
+        $qsort = match ($sorti) {
+            'alphaasc' => 'a.sort_order, a.titel2 ASC',
+            'alphadesc' => 'a.sort_order, a.titel2 DESC',
+            'dateasc' => 'a.sort_order, a.verfassdat ASC',
+            default => 'a.sort_order, a.verfassdat DESC',
+        };
 
         $sql .= 'ORDER BY ' . $qsort;
 
@@ -1566,9 +1652,8 @@ class ArticlesGateway
         $objurl = '';
 
         foreach ($qart as $comm) {
-            $comm ['comment_text'] = RenderersGateway::RenderText($comm ['comment_text'], $comm ['comment_text_type']);//Todo is currently in renders
-            $comm ['comment_short'] = limit_string(strip_tags(str_replace('<br />', ' ', $comm ['comment_text'])), 70);
-            //Todo is currently in functions.php
+            $comm ['comment_text'] = RenderersGateway::RenderText($comm ['comment_text'], $comm ['comment_text_type']);
+            $comm ['comment_short'] = $this->limitString(strip_tags(str_replace('<br />', ' ', $comm ['comment_text'])), 70);
 
             if ($comm ['approved'] == 'yes')
                 $nofo = '';
@@ -1607,7 +1692,7 @@ class ArticlesGateway
         // Process the trackback now
 
         if (!empty ($url))
-            if (substr($url, 0, 4) != 'http')
+            if (!str_starts_with($url, 'http'))
                 $url = 'http://' . $url;
 
         $data = array();
@@ -1636,7 +1721,8 @@ class ArticlesGateway
 
         $this->updateCommentCount($article_id);
 
-        send_commentmail($article_id, $comment_id, $author, $email, $url, $comment);//Todo currently in functions
+        if (function_exists('send_commentmail'))
+            send_commentmail($article_id, $comment_id, $author, $email, $url, $comment); //Todo currently in functions
     }
 
 
@@ -1656,7 +1742,7 @@ class ArticlesGateway
         $art = $this->db->get($sql, array($roleid, $pathname));
 
         if (empty($art)) {
-            if ($roleid == 0 || $withdefault == false)
+            if ($roleid == 0 || !$withdefault)
                 return '';
 
             $sql = 'SELECT fullurl FROM ' . self::ART_TABLE . ' WHERE app_route_role_id=0 AND app_route_pathname=?';

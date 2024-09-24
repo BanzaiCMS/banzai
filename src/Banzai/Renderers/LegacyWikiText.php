@@ -1026,31 +1026,7 @@ class LegacyWikiText
     public static function addanchor($inhalt, $praein, $postin, $zurueck = null)
     {
 
-        // deaktivieren ...
-        // weil Links in Ueberschriften nicht validieren ... und alles kaputt machen ...
-        // $ret = $praein .$inhalt . $postin ;
-        // return $ret;
-
-
-        // if ( (empty($inhalt)) || ($inhalt==' ') || ($inhalt=='&nbsp;')   ) {
-        //	$ret = $praein .$inhalt . $postin ;
-        //	return $ret;
-        // }
-
-
-        // $url = str_replace(" ","_",$inhalt);
-        // $url = str_replace(',','',$url);
-        // $url = htmlentities($url,ENT_QUOTES,INS_CHARSET_ENCODING);
-        // $url = str_replace('%','',$url);
-
-
-        // $url = makeSEOCleanURL($inhalt);
-
-
         $url = $inhalt;
-
-        // $ret = '<a name="' . $url . '" id="' . $url . '"></a>' . $praein . $inhalt . $postin ;
-        // $ret = '<a id="id' . $url . '"></a>' . $praein . $inhalt . $postin ;
         $ret = '<a id="' . $url . '"></a>';
         return $ret;
     }

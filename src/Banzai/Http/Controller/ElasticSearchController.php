@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Banzai\Http\Controller;
 
+use Banzai\Domain\Blocks\BlocksGateway;
 use Flux\Config\Config;
 use Flux\Container\ContainerInterface;
 use Flux\Logger\LoggerInterface;
@@ -31,7 +32,8 @@ class ElasticSearchController extends AbstractController implements ControllerIn
             $container->get('tracker'),
             $container->get('elastic'),
             $container->get(FoldersGateway::class),
-            $container->get(ArticlesGateway::class)
+            $container->get(ArticlesGateway::class),
+            $container->get(BlocksGateway::class)
         );
     }
 
@@ -42,42 +44,11 @@ class ElasticSearchController extends AbstractController implements ControllerIn
                                 ClientTracker            $tracker,
                                 protected ElasticService $elastic,
                                 FoldersGateway           $FoldersGateway,
-                                ArticlesGateway          $ArticlesGateway)
+                                ArticlesGateway          $ArticlesGateway,
+                                BlocksGateway            $BlocksGateway)
     {
-        parent::__construct($logger, $params, $route, $NavigationGateway, $tracker, $FoldersGateway, $ArticlesGateway);
+        parent::__construct($logger, $params, $route, $NavigationGateway, $tracker, $FoldersGateway, $ArticlesGateway, $BlocksGateway);
     }
-
-
-    function limit_string(string $stri, int $maxlen, string $pofi = '')
-    {
-        if (iconv_strlen($stri) <= $maxlen)
-            return $stri;
-
-        $a = explode(' ', $stri);
-        if (!is_array($a))
-            return $stri;
-
-        $maxlen = $maxlen - iconv_strlen($pofi);
-
-        $zaehl = 0;
-        $spack = '';
-        $resi = '';
-
-        foreach ($a as $zeile) {
-            $zeile = trim($zeile);
-            $lenw = iconv_strlen($zeile);
-            if ($lenw == 0)
-                continue;
-
-            if ($maxlen < $zaehl + $lenw)
-                return ($resi . $pofi);
-            $resi = $resi . $spack . $zeile;
-            $zaehl = $zaehl + $lenw + 1;
-            $spack = ' ';
-        }
-        return $resi;
-    }
-
 
     protected function dosearch($query): array
     {
@@ -96,11 +67,11 @@ class ElasticSearchController extends AbstractController implements ControllerIn
         foreach ($hits as $entry) {
             $r = $entry['_source'];
             $title = $entry['_source']['Title'];
-            $r['ShortTitle'] = $this->limit_string($title, 60, '...');
+            $r['ShortTitle'] = $this->ArticlesGateway->limitString($title, 60, '...');
 
             $description = $entry['_source']['ContentText'];
             $description = html_entity_decode($description, ENT_COMPAT, 'UTF-8');    // nochmal, um Unlaute zu entfernen...
-            $description = $this->limit_string($description, 160, '...');
+            $description = $this->ArticlesGateway->limitString($description, 160, '...');
             $description = str_ireplace($query, '<span class="highlight">' . $query . '</span>', $description);
             $r['ShortDescription'] = $description;
 

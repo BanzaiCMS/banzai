@@ -104,9 +104,9 @@ class TranslatorService implements TranslatorServiceInterface
 
             if (!empty($replacedata))
                 foreach ($replacedata as $feld => $inhalt)
-                    $ret = str_replace('{{' . $feld . '}}', $inhalt, $ret);
+                    $ret = str_replace('{{' . (string)$feld . '}}', (string)$inhalt, $ret);
 
-            return ($ret);
+            return $ret;
         }
 
         // message/key not found and automatically create empty data record
@@ -128,7 +128,7 @@ class TranslatorService implements TranslatorServiceInterface
                 foreach ($replacedata as $feld => $inhalt)
                     $ret = str_replace('{{' . $feld . '}}', $inhalt, $ret);
 
-            return ($ret);
+            return $ret;
         }
 
         // message/key not found and automatically create empty data record

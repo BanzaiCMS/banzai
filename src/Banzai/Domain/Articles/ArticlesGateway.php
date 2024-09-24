@@ -5,7 +5,6 @@ namespace Banzai\Domain\Articles;
 
 use Banzai\Domain\Users\UsersGateway;
 use Exception;
-use DOMDocument;
 use Twig\Environment as Twig;
 use Flux\Database\DatabaseInterface;
 use Flux\Logger\LoggerInterface;
@@ -18,21 +17,13 @@ use Banzai\Renderers\RenderersGateway;
 use Banzai\I18n\Locale\LocaleServiceInterface;
 use Banzai\Domain\Tagging\TagsGateway;
 
-use function function_exists;
-
-// Todo remove
-use function getHTTPpage;
-
-// Todo remove
-use function send_commentmail;
-
-
 class ArticlesGateway
 {
     const string ART_TABLE = 'article';
     const string COMMENTS_TABLE = 'comments';
     const string TRACKBACK_TABLE = 'trackbacks';
     const string GEOOBJ_TABLE = 'geo_objects';
+
     const string FEEDS_TABLE = 'feeds';
 
     protected const array  weekdaynames = array(
@@ -258,161 +249,6 @@ class ArticlesGateway
             return array();
 
         return $this->transformArticleToShow($row);
-    }
-
-    public function importRSSFeed(int $id, bool $isdebug = false): int
-    {
-
-        $tb = $this->db->get(' SELECT * FROM ' . self::FEEDS_TABLE . ' WHERE feed_id=?', array($id));
-
-        $context = array('feedid' => $id);
-
-        if (empty($tb)) {
-            $this->logger->error('feedid not found', $context);
-            return 0;
-        }
-
-        if ($tb ['categories_id'] < 1) {
-            $this->logger->error('catid<1', $context);
-            return 0;
-        }
-
-        if ($isdebug)
-            $this->logger->debug('URL: ' . $tb ['feedurl'], $context);
-
-        $resp = getHTTPpage($tb ['feedurl'], 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1.', false, '', 'GET', array(), true, '', false);
-
-
-        if (!isset($resp['status'])) {
-            $this->logger->error('CURL-Fehler: status is not set', $context);
-            return 0;
-        }
-
-        if ($resp['status'] == -1) {
-            $this->logger->warning('CURL-Fehler: ' . $resp['body'], $context);
-            return 0;
-        }
-
-        if (empty ($resp['body'])) {
-            $this->logger->warning('HTTP-Antwort:' . $resp['status'] . ' Body ist leer', $context);
-            return 0;
-        }
-
-        $domDocument = new DOMDocument ();
-        $domDocument->preserveWhiteSpace = false;
-
-        $okidoki = $domDocument->loadXML($resp['body']);
-        restore_error_handler();
-
-        if (!$okidoki) {
-            $this->logger->warning('Fehler bei loadXML', $context);
-            return 0;
-        }
-
-        $artb = array();
-        $artb ['titel1'] = $tb ['feedname'];
-        $artb ['kurztext_type'] = 'html';
-        $artb ['langtext_type'] = 'html';
-        $artb ['feed_id'] = $tb ['feed_id'];
-        $artb ['categories_id'] = $tb ['categories_id'];
-        $artb ['object_template'] = $tb ['object_template'];
-        $artb ['teaser_template'] = $tb ['teaser_template'];
-        $artb ['astatus'] = 'aktiv';
-        $artb ['visible'] = $tb ['visible'];
-        $artb ['visible_sitemaps'] = $tb ['visible_sitemaps'];
-        $artb ['feed_enabled'] = $tb ['feed_redistribute'];
-
-        $zaehler = 0;
-
-        foreach ($domDocument->getElementsByTagName('item') as $element) {
-            $art = $artb;
-            $link = '';
-            $guid = '';
-            $zaehler += 1;
-            foreach ($element->childNodes as $cnode)
-                if ($cnode->nodeType == 1) {
-                    $in = $cnode->textContent;
-                    $nn = $cnode->nodeName;
-
-                    switch ($nn) {
-                        case 'title' :
-                            $art ['titel2'] = $in;
-                            break;
-                        case 'guid' :
-                            $guid = urldecode($in);
-                            break;
-                        case 'link' :
-                            $link = urldecode($in);
-                            break;
-                        case 'description' :
-                            $art ['kurztext'] = $in;
-                            break;
-                        case 'content:encoded' :
-                            $art ['langtext'] = $in;
-                            break;
-                    }
-                }
-
-            $url = $art ['titel2'];
-
-            if ($tb ['feedclass'] == 'twitter') {
-                $tit = $art ['titel2'];
-                $tit = htmlspecialchars_decode($tit);
-                $pos = strpos($tit, ':');
-                if ($pos !== false)
-                    $tit = substr($tit, $pos + 2);
-
-                $twa = explode(' ', $tit);
-                $twt = '';
-                $twc = '';
-                $url = '';
-                foreach ($twa as $twit) {
-                    if (strncasecmp($twit, 'http://', 7) == 0) {
-                        $twc .= '<a href="' . $twit . '">' . $twit . '</a> ';
-                        continue;
-                    }
-
-                    $twt .= $twit . ' ';
-                    $twc .= $twit . ' ';
-                    $url .= $twit . ' ';
-
-                }
-                $url = str_replace('#', '', $url);
-                $art ['titel2'] = $twt;
-                $art ['langtext'] = $twc;
-                $art ['kurztext'] = $twc;
-            }
-
-            if (empty ($link))
-                $art ['url_external'] = $guid;
-            else
-                $art ['url_external'] = $link;
-
-            if (empty ($art ['langtext']))
-                $art ['langtext'] = $art ['kurztext'];
-
-            if (empty ($art ['kurztext']))
-                $art ['kurztext'] = $art ['langtext'];
-            $art ['pagetitle'] = $art ['titel2'];
-            $art ['navititel'] = $art ['titel2'];
-            $art ['linktitle'] = $art ['titel2'];
-            $art ['url'] = $this->makeSEOCleanURL($url);
-
-            $item = $this->getArticleIDFromURL($art ['url'], $art ['categories_id']);
-
-            if (!empty($item))  // already exists, so do not import again
-                continue;
-
-            $art['verfassdat'] = $this->db->timestamp();
-
-            $this->db->add(self::ART_TABLE, $art);
-        }
-
-        $data = array('feed_id' => $tb ['feed_id']);
-        $data['updated'] = $this->db->timestamp();
-        $this->db->put(self::FEEDS_TABLE, $data, array('feed_id'), false);
-
-        return $zaehler;
     }
 
 
@@ -1684,7 +1520,7 @@ class ArticlesGateway
      * Add a comment to an article
      *
      */
-    public function addComment(int $article_id, string $author, string $email, string $url, string $comment, string $sendmail): void
+    public function addComment(int $article_id, string $author, string $email, string $url, string $comment, string $sendmail): int
     {
         $userobj = Application::get('user')->getAll();
         $request = Application::get('request');
@@ -1721,8 +1557,8 @@ class ArticlesGateway
 
         $this->updateCommentCount($article_id);
 
-        if (function_exists('send_commentmail'))
-            send_commentmail($article_id, $comment_id, $author, $email, $url, $comment); //Todo currently in functions
+        return $comment_id;
+
     }
 
 

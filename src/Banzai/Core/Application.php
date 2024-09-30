@@ -32,7 +32,7 @@ use Banzai\Domain\Tickets\TicketsGateway;
 
 class Application extends FluxCoreApplication implements ApplicationInterface
 {
-    protected string $frameworkversion = '6.0.5';
+    protected string $frameworkversion = '6.0.6';
 
     public function getVersion(bool $parent = false): string
     {

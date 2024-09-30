@@ -22,7 +22,7 @@ class TagsGateway
 
         $this->db->statement('TRUNCATE ' . self::TAGLIST_TABLE);
 
-        $this->db->statement(self::TAGGING_TABLE);
+        $this->db->statement('TRUNCATE ' . self::TAGGING_TABLE);
 
         $liste = $this->db->getlist('SELECT article_id,keywords FROM ' . ArticlesGateway::ART_TABLE . ' WHERE keywords<>""');
         foreach ($liste as $art)
@@ -116,21 +116,24 @@ class TagsGateway
     }
 
 
-    public function updatetagname(string $tag, string $objclass = 'article', string $tagstr = ''): void
+    public function updatetagname(string $tag, string $objclass = 'article', string $tagstr = ''): bool
     {
 
         $tagentry = $this->db->get('SELECT tagnameid,visname FROM ' . self::TAGLIST_TABLE . ' WHERE objclass=? AND tagname=?', array($objclass, $tag));
 
+        // not found
         if (empty($tagentry))
-            return;
+            return false;
 
+        // no need to change
         if ($tagentry['visname'] == $tagstr)
-            return;
+            return true;
 
+        // now we change the name
         $data = array();
         $data['visname'] = $tagstr;
         $data['tagnameid'] = $tagentry['tagnameid'];
-        $this->db->put(self::TAGLIST_TABLE, $data, array('tagnameid'), false);
+        return $this->db->put(self::TAGLIST_TABLE, $data, array('tagnameid'), false);
     }
 
 
@@ -164,6 +167,22 @@ class TagsGateway
         return true;
     }
 
+    public function cleanTagName(string $tag): string
+    {
+        $tag = strtolower($tag);
+
+        // remove special chars
+        $tag = str_replace("'", '', $tag);
+        $tag = str_replace('"', '', $tag);
+        $tag = str_replace("\\", '', $tag);
+
+        // Semicolon and comma should not be in Tags
+        $tag = str_replace(';', '', $tag);
+        $tag = str_replace(",", '', $tag);
+
+        return $tag;
+    }
+
     public function updatetags(string $objclass, int $objid, $tags): void
     {
 
@@ -178,15 +197,7 @@ class TagsGateway
         foreach ($tags as $tag) {
             $tag = trim($tag);
             if (!empty($tag)) {
-                $tagidx = strtolower($tag);
-                $tagidx = str_replace("'", '', $tagidx);
-                $tagidx = str_replace('"', '', $tagidx);
-                $tagidx = str_replace("\\", '', $tagidx);
-
-                // Semikolon and comma should not be in Tags
-                $tagidx = str_replace(';', '', $tagidx);
-                $tagidx = str_replace(",", '', $tagidx);
-
+                $tagidx = $this->cleanTagName($tag);
                 if (!empty($tagidx))
                     $addlist[$tagidx] = $tag;
             }

@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [ 8.3 ]
-        phpunit: [ '11.3.1' ]
+        php: [ 8.4 ]
+        phpunit: [ '12' ]
         stability: [ prefer-stable ]
 
     name: PHP ${{ matrix.php }} - PHPUnit ${{ matrix.phpunit }} - ${{ matrix.stability }}

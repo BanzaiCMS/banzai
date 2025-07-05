@@ -53,12 +53,13 @@ class ArticlesGateway
 
     protected RouteProviderInterface $router;
 
-    public function __construct(protected ?DatabaseInterface $db = null, protected ?LoggerInterface $logger = null, protected ?Config $params = null, protected ?Twig $twig = null, protected ?LocaleServiceInterface $locale = null, protected ?FoldersGateway $folders = null)
+    public function __construct(protected ?Application $application = null, protected ?DatabaseInterface $db = null, protected ?LoggerInterface $logger = null, protected ?Config $params = null, protected ?Twig $twig = null, protected ?LocaleServiceInterface $locale = null, protected ?FoldersGateway $folders = null)
     {
     }
 
-    public function _inject(DatabaseInterface $db, LoggerInterface $logger, Config $params, Twig $twig, LocaleServiceInterface $locale, FoldersGateway $folders)
+    public function _inject(Application $application, DatabaseInterface $db, LoggerInterface $logger, Config $params, Twig $twig, LocaleServiceInterface $locale, FoldersGateway $folders): void
     {
+        $this->application = $application;
         $this->db = $db;
         $this->logger = $logger;
         $this->folders = $folders;
@@ -81,7 +82,7 @@ class ArticlesGateway
         $z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         $t = array();
 
-        $sepa = Application::get('config')->get('system.url.wordseparator');
+        $sepa = $this->params->get('system.url.wordseparator');
         if (empty($sepa))
             $sepa = '-';
 
@@ -181,7 +182,8 @@ class ArticlesGateway
         if (!$all) {
             $sql = $sql . " AND astatus = 'aktiv' ";
 
-            if (Application::getApplication()->isStaging())
+
+            if ($this->application && $this->application->isStaging())
                 $sql .= ' AND stagingstate<>"notinstage" ';
             else
                 $sql .= ' AND stagingstate<>"stageonly" ';
@@ -203,7 +205,7 @@ class ArticlesGateway
 
         if (!$ignoreActiveState) {
             $sql .= ' AND astatus = "aktiv"';
-            if (Application::getApplication()->isStaging())
+            if ($this->application && $this->application->isStaging())
                 $sql .= ' AND stagingstate<>"notinstage" ';
             else
                 $sql .= ' AND stagingstate<>"stageonly" ';
@@ -236,7 +238,7 @@ class ArticlesGateway
         if (!$ignoreActiveState) {
             $sql .= ' AND astatus = "aktiv"';
 
-            if (Application::getApplication()->isStaging())
+            if ($this->application && $this->application->isStaging())
                 $sql .= ' AND stagingstate<>"notinstage" ';
             else
                 $sql .= ' AND stagingstate<>"stageonly" ';
@@ -259,7 +261,7 @@ class ArticlesGateway
     {
         global $my_preview; // TODO eliminate
 
-        $userobj = Application::get('user')->getAll();
+        $userobj = $this->application->get('user')->getAll();
 
         if (is_null($sarr))
             $sarr = array();
@@ -319,7 +321,7 @@ class ArticlesGateway
         if (!isset ($my_preview)) {
             $sql .= ' AND astatus = "aktiv"';
 
-            if (Application::getApplication()->isStaging())
+            if ($this->application && $this->application->isStaging())
                 $sql .= ' AND stagingstate<>"notinstage" ';
             else
                 $sql .= ' AND stagingstate<>"stageonly" ';
@@ -399,7 +401,7 @@ class ArticlesGateway
 
         $sql = 'SELECT article_id FROM ' . self::ART_TABLE . ' WHERE categories_id=? AND category_article ="ja" AND astatus="aktiv"';
 
-        if (Application::getApplication()->isStaging())
+        if ($this->application && $this->application->isStaging())
             $sql .= ' AND stagingstate<>"notinstage" ';
         else
             $sql .= ' AND stagingstate<>"stageonly" ';
@@ -418,7 +420,7 @@ class ArticlesGateway
 
         $sql = 'SELECT article_id FROM ' . self::ART_TABLE . ' WHERE objtype="blogpost" AND astatus="aktiv" ';
 
-        if (Application::getApplication()->isStaging())
+        if ($this->application && $this->application->isStaging())
             $sql .= ' AND stagingstate<>"notinstage" ';
         else
             $sql .= ' AND stagingstate<>"stageonly" ';
@@ -452,7 +454,7 @@ class ArticlesGateway
             $binding['catid'] = $catid;
         }
 
-        if (Application::getApplication()->isStaging())
+        if ($this->application && $this->application->isStaging())
             $sql .= ' AND stagingstate<>"notinstage" ';
         else
             $sql .= ' AND stagingstate<>"stageonly" ';
@@ -551,7 +553,7 @@ class ArticlesGateway
         }
 
         if (($art ['image_id'] > 0) && (empty ($art ['pic_url']))) {
-            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['image_id'], 0, 0); //Todo deprecated function
+            $pida = $this->application->get(PicturesGateway::class)->getPictureLinkdata($art ['image_id'], 0, 0); //Todo deprecated function
             $art ['pic_url'] = $pida ['pic_url'];
             $art ['pic_alt'] = $pida ['pic_alt'];
             $art ['pic_width'] = $pida ['pic_width'];
@@ -562,7 +564,7 @@ class ArticlesGateway
 
         if (isset ($art ['thumbnail_id']))
             if (($art ['thumbnail_id'] > 0) && (empty ($art ['thumbnail_url']))) {
-                $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['thumbnail_id'], 0, 0);
+                $pida = $this->application->get(PicturesGateway::class)->getPictureLinkdata($art ['thumbnail_id'], 0, 0);
                 $art ['thumbnail_url'] = $pida ['pic_url'];
                 $art ['thumbnail_alt'] = $pida ['pic_alt'];
                 $art ['thumbnail_width'] = $pida ['pic_width'];
@@ -719,7 +721,7 @@ class ArticlesGateway
         }
 
         if ($art ['image_id'] > 0) {
-            $pida = Application::get(PicturesGateway::class)->getPictureLinkdata($art ['image_id']);
+            $pida = $this->application->get(PicturesGateway::class)->getPictureLinkdata($art ['image_id']);
             $art ['pic_url'] = $pida ['pic_url'];
             $art ['pic_alt'] = $pida ['pic_alt'];
             $art ['pic_width'] = $pida ['pic_width'];
@@ -815,7 +817,7 @@ class ArticlesGateway
         $binding['dat1'] = $dat;
         $binding['dat2'] = $dat;
 
-        if (Application::getApplication()->isStaging())
+        if ($this->application && $this->application->isStaging())
             $sql .= ' AND stagingstate<>"notinstage" ';
         else
             $sql .= ' AND stagingstate<>"stageonly" ';
@@ -935,7 +937,7 @@ class ArticlesGateway
         if (!isset ($my_preview)) {
             $sql .= ' AND astatus = "aktiv"';
 
-            if (Application::getApplication()->isStaging())
+            if ($this->application && $this->application->isStaging())
                 $sql .= ' AND stagingstate<>"notinstage" ';
             else
                 $sql .= ' AND stagingstate<>"stageonly" ';
@@ -1024,7 +1026,7 @@ class ArticlesGateway
 
             $sql .= ' AND a.astatus = "aktiv"';
 
-            if (Application::getApplication()->isStaging())
+            if ($this->application && $this->application->isStaging())
                 $sql .= ' AND a.stagingstate<>"notinstage" ';
             else
                 $sql .= ' AND a.stagingstate<>"stageonly" ';
@@ -1342,7 +1344,7 @@ class ArticlesGateway
         if (!isset ($my_preview)) {
             $sql .= 'AND a.astatus = "aktiv" AND c.active = "yes" ';
 
-            if (Application::getApplication()->isStaging())
+            if ($this->application && $this->application->isStaging())
                 $sql .= 'AND a.stagingstate<>"notinstage" ';
             else
                 $sql .= 'AND a.stagingstate<>"stageonly" ';
@@ -1522,8 +1524,8 @@ class ArticlesGateway
      */
     public function addComment(int $article_id, string $author, string $email, string $url, string $comment, string $sendmail): int
     {
-        $userobj = Application::get('user')->getAll();
-        $request = Application::get('request');
+        $userobj = $this->application->get('user')->getAll();
+        $request = $this->application->get('request');
 
         // Process the trackback now
 
@@ -1569,7 +1571,7 @@ class ArticlesGateway
      */
     public function getURLFromAppPathname(string $pathname = '', int $roleid = -1, bool $withdefault = true): string
     {
-        $userobj = Application::get('user')->getAll();
+        $userobj = $this->application->get('user')->getAll();
 
         if ($roleid == -1)
             $roleid = $userobj['group_id'];

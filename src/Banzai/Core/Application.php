@@ -32,7 +32,7 @@ use Banzai\Domain\Tickets\TicketsGateway;
 
 class Application extends FluxCoreApplication implements ApplicationInterface
 {
-    protected string $frameworkversion = '6.0.6';
+    protected string $frameworkversion = '6.1.0';
 
     public function getVersion(bool $parent = false): string
     {
@@ -157,6 +157,7 @@ class Application extends FluxCoreApplication implements ApplicationInterface
             $proxy = new ArticlesGateway();
             $di->setInstance(ArticlesGateway::class, $proxy);
             $proxy->_inject(
+                $this,
                 $di->get('db'),
                 $di->get('logger'),
                 $di->get('config'),
